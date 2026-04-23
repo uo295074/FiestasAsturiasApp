@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- 🔙 BOTÓN VOLVER PRO -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnBack"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Volver"
+            android:textAllCaps="false"
+            android:icon="@android:drawable/ic_media_previous"
+            android:backgroundTint="@color/primary"
+            android:textColor="@android:color/white"/>
+
+        <!-- 🖼 IMAGEN -->
+        <ImageView
+            android:id="@+id/image"
+            android:layout_width="match_parent"
+            android:layout_height="220dp"
+            android:scaleType="centerCrop"
+            android:layout_marginTop="12dp"/>
+
+        <!-- 🏷 TITULO -->
+        <TextView
+            android:id="@+id/title"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="#1A1A1A"
+            android:layout_marginTop="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <!-- 📍 LOCALIDAD -->
+        <TextView
+            android:id="@+id/location"
+            android:textSize="14sp"
+            android:textColor="@color/primary"
+            android:layout_marginTop="6dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <!-- 📝 DESCRIPCIÓN -->
+        <TextView
+            android:id="@+id/description"
+            android:textSize="15sp"
+            android:textColor="#555555"
+            android:lineSpacingExtra="2dp"
+            android:layout_marginTop="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+    </LinearLayout>
+</ScrollView>

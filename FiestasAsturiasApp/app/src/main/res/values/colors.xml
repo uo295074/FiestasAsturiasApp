@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- 🎨 BASE -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- 🎯 PRIMARY (moderno Material) -->
+    <color name="primary">#6750A4</color>
+    <color name="primaryVariant">#4F378B</color>
+    <color name="onPrimary">#FFFFFF</color>
+
+    <!-- 🎯 SECONDARY -->
+    <color name="secondary">#03DAC5</color>
+    <color name="onSecondary">#000000</color>
+
+    <!-- 🌫 BACKGROUND -->
+    <color name="background">#F7F7F7</color>
+    <color name="surface">#FFFFFF</color>
+
+    <!-- 🧱 TEXTOS -->
+    <color name="textPrimary">#1A1A1A</color>
+    <color name="textSecondary">#666666</color>
+
+    <!-- ✨ DIVISORES / BORDES -->
+    <color name="border">#E0E0E0</color>
+
+</resources>
