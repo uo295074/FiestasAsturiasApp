@@ -12,7 +12,8 @@ import es.uniovi.imovil.fiestasasturias.model.Fiesta
 import es.uniovi.imovil.fiestasasturias.R
 
 class FiestaAdapter(
-    private val onClick: (Fiesta) -> Unit
+    private val onClick: (Fiesta) -> Unit,
+    private val onFavClick: (Fiesta) -> Unit   // ⭐ nuevo
 ) : RecyclerView.Adapter<FiestaAdapter.ViewHolder>() {
 
     private var lista: List<Fiesta> = emptyList()
@@ -27,6 +28,7 @@ class FiestaAdapter(
         val title: TextView = view.findViewById(R.id.title)
         val location: TextView = view.findViewById(R.id.location)
         val description: TextView = view.findViewById(R.id.description)
+        val fav: ImageView = view.findViewById(R.id.favIcon) // ⭐ nuevo
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -49,12 +51,23 @@ class FiestaAdapter(
             .centerCrop()
             .into(holder.image)
 
-        // 🎯 CLICK
+        // ⭐ estado visual favorito
+        holder.fav.setImageResource(
+            if (fiesta.esFavorito) R.drawable.ic_fav_filled
+            else R.drawable.ic_fav_border
+        )
+
+        // ⭐ click favorito
+        holder.fav.setOnClickListener {
+            onFavClick(fiesta)
+        }
+
+        // 🎯 click normal (detalle + historial)
         holder.itemView.setOnClickListener {
             onClick(fiesta)
         }
 
-        // ✨ ANIMACIÓN PRO (entrada suave)
+        // ✨ animación
         holder.itemView.apply {
             alpha = 0f
             translationY = 80f

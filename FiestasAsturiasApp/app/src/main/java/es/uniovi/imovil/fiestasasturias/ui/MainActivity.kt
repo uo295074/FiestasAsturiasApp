@@ -11,7 +11,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // 🔥 Fragment inicial
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
                 .replace(R.id.fragmentContainerView, HomeFragment())
@@ -26,6 +25,8 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_home -> HomeFragment()
                 R.id.nav_list -> ListFragment()
                 R.id.nav_map -> MapFragment()
+                R.id.nav_fav -> FavoritosFragment()      // ⭐ NUEVO
+                R.id.nav_history -> HistorialFragment()  // 🕓 NUEVO
                 R.id.nav_settings -> SettingsFragment()
                 else -> null
             }

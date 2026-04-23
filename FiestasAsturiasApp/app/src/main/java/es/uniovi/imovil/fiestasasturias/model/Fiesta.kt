@@ -7,4 +7,5 @@ data class Fiesta(
     val imagen: String?,
     val latitud: Double,
     val longitud: Double,
+    var esFavorito: Boolean = false
 )

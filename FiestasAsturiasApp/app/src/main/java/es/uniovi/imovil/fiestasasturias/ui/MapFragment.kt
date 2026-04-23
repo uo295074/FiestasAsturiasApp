@@ -14,11 +14,13 @@ import es.uniovi.imovil.fiestasasturias.R
 import es.uniovi.imovil.fiestasasturias.domain.FiestaViewModel
 import es.uniovi.imovil.fiestasasturias.databinding.FragmentMapBinding
 import android.view.animation.DecelerateInterpolator
+import androidx.fragment.app.activityViewModels
+import kotlin.getValue
 
 class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
 
     private lateinit var map: GoogleMap
-    private val viewModel: FiestaViewModel by viewModels()
+    private val viewModel: FiestaViewModel by activityViewModels()
     private lateinit var binding: FragmentMapBinding
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

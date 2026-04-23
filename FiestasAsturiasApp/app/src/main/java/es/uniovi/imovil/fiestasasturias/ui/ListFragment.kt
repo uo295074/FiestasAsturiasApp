@@ -13,15 +13,15 @@ import androidx.fragment.app.viewModels
 import es.uniovi.imovil.fiestasasturias.domain.FiestaViewModel
 import androidx.core.widget.addTextChangedListener
 import android.widget.ArrayAdapter
+import androidx.fragment.app.activityViewModels
 
 class ListFragment : Fragment() {
 
     private lateinit var binding: FragmentListBinding
-    private val viewModel: FiestaViewModel by viewModels()
+    private val viewModel: FiestaViewModel by activityViewModels()
 
     private lateinit var adapter: FiestaAdapter
 
-    // 🔥 SharedPreferences
     private val PREFS_NAME = "filtros_prefs"
     private val KEY_BUSQUEDA = "busqueda"
     private val KEY_LOCALIDAD = "localidad"
@@ -38,34 +38,43 @@ class ListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 🔥 1. Adapter
-        adapter = FiestaAdapter { fiesta ->
+        // 🔥 Adapter con favoritos + historial
+        adapter = FiestaAdapter(
 
-            val bundle = Bundle().apply {
-                putString("nombre", fiesta.nombre)
-                putString("descripcion", fiesta.descripcion)
-                putString("localidad", fiesta.localidad)
-                putString("imagen", fiesta.imagen)
+            // CLICK → detalle + historial
+            onClick = { fiesta ->
+
+                viewModel.addHistorial(fiesta)
+
+                val bundle = Bundle().apply {
+                    putString("nombre", fiesta.nombre)
+                    putString("descripcion", fiesta.descripcion)
+                    putString("localidad", fiesta.localidad)
+                    putString("imagen", fiesta.imagen)
+                }
+
+                parentFragmentManager.beginTransaction()
+                    .replace(R.id.fragmentContainerView, DetailFragment().apply {
+                        arguments = bundle
+                    })
+                    .addToBackStack(null)
+                    .commit()
+            },
+
+            // ⭐ CLICK FAVORITO
+            onFavClick = { fiesta ->
+                viewModel.toggleFavorito(fiesta)
             }
+        )
 
-            parentFragmentManager.beginTransaction()
-                .replace(R.id.fragmentContainerView, DetailFragment().apply {
-                    arguments = bundle
-                })
-                .addToBackStack(null)
-                .commit()
-        }
-
-        // 🔥 2. RecyclerView
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.adapter = adapter
 
-        // 🔥 3. Observer
+        // 🔥 Observer
         viewModel.fiestas.observe(viewLifecycleOwner) { fiestas ->
 
             adapter.setData(fiestas)
 
-            // 🎛 localidades únicas
             val localidades = fiestas
                 .map { it.localidad }
                 .distinct()
@@ -102,14 +111,10 @@ class ListFragment : Fragment() {
             viewModel.buscarYFiltrar(textoBusqueda, textoFiltro)
         }
 
-        // 🔥 cargar filtros guardados
         cargarFiltros()
-
-        // 🔥 cargar datos
         viewModel.cargarFiestas()
     }
 
-    // 💾 guardar
     private fun guardarFiltros(busqueda: String, localidad: String) {
         val prefs = requireContext().getSharedPreferences(PREFS_NAME, 0)
         prefs.edit()
@@ -118,7 +123,6 @@ class ListFragment : Fragment() {
             .apply()
     }
 
-    // 🔄 cargar
     private fun cargarFiltros() {
         val prefs = requireContext().getSharedPreferences(PREFS_NAME, 0)
 
@@ -128,7 +132,6 @@ class ListFragment : Fragment() {
         binding.searchInput.setText(busqueda)
         binding.spinnerLocalidad.setText(localidad, false)
 
-        // aplicar filtros automáticamente
         viewModel.buscarYFiltrar(busqueda, localidad)
     }
 }

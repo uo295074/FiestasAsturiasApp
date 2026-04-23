@@ -13,8 +13,7 @@
     app:cardBackgroundColor="@android:color/white"
     android:foreground="?attr/selectableItemBackground">
 
-    <LinearLayout
-        android:orientation="vertical"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -25,43 +24,55 @@
             android:layout_height="200dp"
             android:scaleType="centerCrop"/>
 
-        <!-- 📄 CONTENIDO -->
-        <LinearLayout
-            android:orientation="vertical"
-            android:padding="14dp"
+        <!-- ⭐ FAVORITO -->
+        <ImageView
+            android:id="@+id/favIcon"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="top|end"
+            android:layout_margin="10dp"
+            android:background="@android:color/white"
+            android:padding="4dp"
+            android:elevation="4dp"
+            android:src="@drawable/ic_fav_border"/>
+
+    </FrameLayout>
+
+    <!-- 📄 CONTENIDO -->
+    <LinearLayout
+        android:orientation="vertical"
+        android:padding="14dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- 🏷 TITULO -->
+        <TextView
+            android:id="@+id/title"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/textPrimary"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"/>
 
-            <!-- 🏷 TITULO -->
-            <TextView
-                android:id="@+id/title"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="#1A1A1A"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+        <!-- 📍 LOCALIDAD -->
+        <TextView
+            android:id="@+id/location"
+            android:textSize="14sp"
+            android:textColor="@color/primary"
+            android:layout_marginTop="6dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
 
-            <!-- 📍 LOCALIDAD -->
-            <TextView
-                android:id="@+id/location"
-                android:textSize="14sp"
-                android:textColor="@color/primary"
-                android:layout_marginTop="6dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
-
-            <!-- 📝 DESCRIPCION -->
-            <TextView
-                android:id="@+id/description"
-                android:maxLines="2"
-                android:ellipsize="end"
-                android:textSize="14sp"
-                android:textColor="#666666"
-                android:layout_marginTop="8dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
-
-        </LinearLayout>
+        <!-- 📝 DESCRIPCIÓN -->
+        <TextView
+            android:id="@+id/description"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:textSize="14sp"
+            android:textColor="@color/textSecondary"
+            android:layout_marginTop="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
 
     </LinearLayout>
 
