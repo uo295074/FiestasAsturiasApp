@@ -10,8 +10,8 @@ android {
 
     defaultConfig {
         applicationId = "es.uniovi.imovil.fiestasasturias"
-        minSdk = 24
-        targetSdk = 36
+        minSdk = 26
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -72,4 +72,7 @@ dependencies {
 
     //Maps
     implementation("com.google.android.gms:play-services-maps:18.2.0")
+
+    //Dependencia de localizacion
+    implementation("com.google.android.gms:play-services-location:21.0.1")
 }

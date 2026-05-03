@@ -11,7 +11,7 @@
 
     <!-- 🎉 TÍTULO -->
     <TextView
-        android:text="Fiestas Asturias 🎉"
+        android:text="@string/app_name"
         android:textSize="32sp"
         android:textStyle="bold"
         android:textColor="@color/textPrimary"
@@ -21,7 +21,7 @@
 
     <!-- 📄 SUBTEXTO -->
     <TextView
-        android:text="Descubre las mejores fiestas, eventos y tradiciones de Asturias"
+        android:text="@string/title_phrase"
         android:textSize="16sp"
         android:textColor="@color/textSecondary"
         android:gravity="center"
@@ -45,7 +45,7 @@
             android:layout_height="wrap_content">
 
             <TextView
-                android:text="Explora 🎯"
+                android:text="@string/title_explore"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="@android:color/white"
@@ -53,7 +53,7 @@
                 android:layout_height="wrap_content"/>
 
             <TextView
-                android:text="Usa la barra inferior para ver la lista o el mapa"
+                android:text="@string/title_indication"
                 android:textSize="14sp"
                 android:textColor="@android:color/white"
                 android:layout_marginTop="6dp"

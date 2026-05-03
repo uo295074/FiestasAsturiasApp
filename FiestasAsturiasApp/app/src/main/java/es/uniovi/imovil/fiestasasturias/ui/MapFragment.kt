@@ -1,9 +1,13 @@
 package es.uniovi.imovil.fiestasasturias.ui
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.View
+import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -14,8 +18,6 @@ import es.uniovi.imovil.fiestasasturias.R
 import es.uniovi.imovil.fiestasasturias.domain.FiestaViewModel
 import es.uniovi.imovil.fiestasasturias.databinding.FragmentMapBinding
 import android.view.animation.DecelerateInterpolator
-import androidx.fragment.app.activityViewModels
-import kotlin.getValue
 
 class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
 
@@ -28,7 +30,7 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
 
         binding = FragmentMapBinding.bind(view)
 
-        // ✨ Animación entrada
+        // ✨ Animación
         binding.root.alpha = 0f
         binding.root.animate()
             .alpha(1f)
@@ -38,6 +40,7 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
 
         val mapFragment = childFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
+
         mapFragment.getMapAsync(this)
     }
 
@@ -45,7 +48,12 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
         map = googleMap
 
         map.uiSettings.isZoomControlsEnabled = true
-        map.uiSettings.isMapToolbarEnabled = true
+
+        // 📍 fallback SIEMPRE → Asturias
+        val asturias = LatLng(43.3619, -5.8494)
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(asturias, 7f))
+
+        obtenerUbicacionUsuario()
 
         map.setOnInfoWindowClickListener { marker ->
 
@@ -54,7 +62,6 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
             }
 
             fiesta?.let {
-
                 val bundle = Bundle().apply {
                     putString("nombre", it.nombre)
                     putString("descripcion", it.descripcion)
@@ -63,12 +70,6 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
                 }
 
                 parentFragmentManager.beginTransaction()
-                    .setCustomAnimations(
-                        android.R.anim.fade_in,
-                        android.R.anim.fade_out,
-                        android.R.anim.fade_in,
-                        android.R.anim.fade_out
-                    )
                     .replace(R.id.fragmentContainerView, DetailFragment().apply {
                         arguments = bundle
                     })
@@ -83,32 +84,73 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
 
             fiestas.forEach { fiesta ->
 
-                val lat = fiesta.latitud
-                val lng = fiesta.longitud
+                val posicion = LatLng(fiesta.latitud, fiesta.longitud)
 
-                if (lat != 0.0 && lng != 0.0) {
+                map.addMarker(
+                    MarkerOptions()
+                        .position(posicion)
+                        .title(fiesta.nombre)
+                        .snippet(fiesta.localidad)
+                )
+            }
 
-                    val posicion = LatLng(lat, lng)
+            // VOLVER A PINTAR USUARIO
+            viewModel.userLat?.let { lat ->
+                viewModel.userLng?.let { lng ->
+
+                    val userLatLng = LatLng(lat, lng)
 
                     map.addMarker(
                         MarkerOptions()
-                            .position(posicion)
-                            .title(fiesta.nombre)
-                            .snippet(fiesta.localidad)
+                            .position(userLatLng)
+                            .title("Tu ubicación")
                     )
                 }
             }
-
-            val asturias = LatLng(43.3619, -5.8494)
-
-            // 🎯 Animación cámara suave
-            map.animateCamera(
-                CameraUpdateFactory.newLatLngZoom(asturias, 7f),
-                1200,
-                null
-            )
         }
 
         viewModel.cargarFiestas()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        obtenerUbicacionUsuario() // 🔥 se actualiza siempre
+    }
+
+    private fun obtenerUbicacionUsuario() {
+
+        val fusedLocation = LocationServices.getFusedLocationProviderClient(requireContext())
+
+        if (ActivityCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+
+        fusedLocation.getCurrentLocation(
+            com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY,
+            null
+        ).addOnSuccessListener { location ->
+
+            location?.let {
+
+                val userLatLng = LatLng(it.latitude, it.longitude)
+
+                // 🔥 GUARDAR BIEN
+                viewModel.setUserLocation(it.latitude, it.longitude)
+
+                map.addMarker(
+                    MarkerOptions()
+                        .position(userLatLng)
+                        .title("Tu ubicación")
+                )
+
+                map.animateCamera(
+                    CameraUpdateFactory.newLatLngZoom(userLatLng, 10f)
+                )
+            }
+        }
     }
 }

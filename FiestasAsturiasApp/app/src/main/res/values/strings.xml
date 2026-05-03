@@ -1,5 +1,25 @@
 <resources>
-    <string name="app_name">FiestasAsturiasApp</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="app_name">Fiestas Asturias</string>
+
+    <string name="search_hint">Buscar fiesta...</string>
+    <string name="filter_hint">Filtrar por localidad</string>
+    <string name="distance_filter">Filtrar por distancia (km)</string>
+
+    <string name="dark_mode">Modo oscuro</string>
+    <string name="settings">Configuración</string>
+    <string name="dark_mode_indication">Activa el tema oscuro de la app</string>
+
+    <string name="favorites">Favoritos</string>
+    <string name="history">Historial</string>
+    <string name="list">Lista</string>
+    <string name="map">Mapa</string>
+    <string name="home">Inicio</string>
+
+    <string name="back">Volver</string>
+
+    <string name="title_phrase">Descubre las mejores fiestas, eventos y tradiciones de Asturias</string>
+    <string name="title_explore">Explora</string>
+    <string name="title_indication">Usa la barra inferior para ver la lista o el mapa</string>
+
+    <string name="your_location">Tu ubicación</string>
 </resources>

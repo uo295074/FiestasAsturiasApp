@@ -9,7 +9,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import es.uniovi.imovil.fiestasasturias.R
 import es.uniovi.imovil.fiestasasturias.adapters.FiestaAdapter
 import es.uniovi.imovil.fiestasasturias.databinding.FragmentListBinding
-import androidx.fragment.app.viewModels
 import es.uniovi.imovil.fiestasasturias.domain.FiestaViewModel
 import androidx.core.widget.addTextChangedListener
 import android.widget.ArrayAdapter
@@ -19,12 +18,16 @@ class ListFragment : Fragment() {
 
     private lateinit var binding: FragmentListBinding
     private val viewModel: FiestaViewModel by activityViewModels()
-
     private lateinit var adapter: FiestaAdapter
 
     private val PREFS_NAME = "filtros_prefs"
     private val KEY_BUSQUEDA = "busqueda"
     private val KEY_LOCALIDAD = "localidad"
+
+    private var kmActual: Double = 50.0
+
+    // 🔥 detectar tablet UNA VEZ
+    private var isTablet = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -38,10 +41,10 @@ class ListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 🔥 Adapter con favoritos + historial
+        isTablet = requireActivity().findViewById<View?>(R.id.detailContainer) != null
+
         adapter = FiestaAdapter(
 
-            // CLICK → detalle + historial
             onClick = { fiesta ->
 
                 viewModel.addHistorial(fiesta)
@@ -53,15 +56,24 @@ class ListFragment : Fragment() {
                     putString("imagen", fiesta.imagen)
                 }
 
-                parentFragmentManager.beginTransaction()
-                    .replace(R.id.fragmentContainerView, DetailFragment().apply {
-                        arguments = bundle
-                    })
-                    .addToBackStack(null)
-                    .commit()
+                val detailFragment = DetailFragment().apply {
+                    arguments = bundle
+                }
+
+                if (isTablet) {
+                    // 👉 tablet: cargar en panel derecho
+                    parentFragmentManager.beginTransaction()
+                        .replace(R.id.detailContainer, detailFragment)
+                        .commit()
+                } else {
+                    // 👉 móvil: navegación normal
+                    parentFragmentManager.beginTransaction()
+                        .replace(R.id.fragmentContainerView, detailFragment)
+                        .addToBackStack(null)
+                        .commit()
+                }
             },
 
-            // ⭐ CLICK FAVORITO
             onFavClick = { fiesta ->
                 viewModel.toggleFavorito(fiesta)
             }
@@ -70,15 +82,11 @@ class ListFragment : Fragment() {
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.adapter = adapter
 
-        // 🔥 Observer
         viewModel.fiestas.observe(viewLifecycleOwner) { fiestas ->
 
             adapter.setData(fiestas)
 
-            val localidades = fiestas
-                .map { it.localidad }
-                .distinct()
-                .sorted()
+            val localidades = fiestas.map { it.localidad }.distinct().sorted()
 
             val adapterLocalidades = ArrayAdapter(
                 requireContext(),
@@ -89,30 +97,45 @@ class ListFragment : Fragment() {
             binding.spinnerLocalidad.setAdapter(adapterLocalidades)
         }
 
+        // 📏 SLIDER KM
+        binding.sliderKm.addOnChangeListener { _, value, _ ->
+
+            kmActual = value.toDouble()
+            binding.textKm.text = "${kmActual.toInt()} km"
+
+            aplicarFiltros()
+        }
+
         // 🔍 BUSCADOR
         binding.searchInput.addTextChangedListener {
-
-            val textoBusqueda = it.toString()
-            val textoFiltro = binding.spinnerLocalidad.text.toString()
-
-            guardarFiltros(textoBusqueda, textoFiltro)
-
-            viewModel.buscarYFiltrar(textoBusqueda, textoFiltro)
+            guardarFiltros(it.toString(), binding.spinnerLocalidad.text.toString())
+            aplicarFiltros()
         }
 
         // 🎛 FILTRO
         binding.spinnerLocalidad.addTextChangedListener {
-
-            val textoBusqueda = binding.searchInput.text.toString()
-            val textoFiltro = it.toString()
-
-            guardarFiltros(textoBusqueda, textoFiltro)
-
-            viewModel.buscarYFiltrar(textoBusqueda, textoFiltro)
+            guardarFiltros(binding.searchInput.text.toString(), it.toString())
+            aplicarFiltros()
         }
 
         cargarFiltros()
-        viewModel.cargarFiestas()
+
+        // 🔥 evitar recargar innecesariamente
+        if (viewModel.fiestas.value == null) {
+            viewModel.cargarFiestas()
+        }
+    }
+
+    private fun aplicarFiltros() {
+
+        val texto = binding.searchInput.text.toString()
+        val localidad = binding.spinnerLocalidad.text.toString()
+
+        viewModel.buscarFiltrarYDistancia(
+            texto,
+            localidad,
+            kmActual
+        )
     }
 
     private fun guardarFiltros(busqueda: String, localidad: String) {
@@ -131,7 +154,5 @@ class ListFragment : Fragment() {
 
         binding.searchInput.setText(busqueda)
         binding.spinnerLocalidad.setText(localidad, false)
-
-        viewModel.buscarYFiltrar(busqueda, localidad)
     }
 }

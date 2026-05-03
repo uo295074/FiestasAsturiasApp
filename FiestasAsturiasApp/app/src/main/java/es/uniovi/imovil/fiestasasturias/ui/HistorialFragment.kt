@@ -4,19 +4,19 @@ import android.os.Bundle
 import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import es.uniovi.imovil.fiestasasturias.R
 import es.uniovi.imovil.fiestasasturias.adapters.FiestaAdapter
 import es.uniovi.imovil.fiestasasturias.databinding.FragmentListBinding
 import es.uniovi.imovil.fiestasasturias.domain.FiestaViewModel
-import kotlin.getValue
 
 class HistorialFragment : Fragment() {
 
     private lateinit var binding: FragmentListBinding
     private val viewModel: FiestaViewModel by activityViewModels()
     private lateinit var adapter: FiestaAdapter
+
+    private var isTablet = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -30,13 +30,15 @@ class HistorialFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        isTablet = requireActivity().findViewById<View?>(R.id.detailContainer) != null
 
+        // 🔥 ocultar filtros
         binding.searchLayout.visibility = View.GONE
         binding.filterLayout.visibility = View.GONE
+        binding.cardKm.visibility = View.GONE
 
         adapter = FiestaAdapter(
 
-            // CLICK → detalle + historial (ya está en historial)
             onClick = { fiesta ->
 
                 val bundle = Bundle().apply {
@@ -46,15 +48,24 @@ class HistorialFragment : Fragment() {
                     putString("imagen", fiesta.imagen)
                 }
 
-                parentFragmentManager.beginTransaction()
-                    .replace(R.id.fragmentContainerView, DetailFragment().apply {
-                        arguments = bundle
-                    })
-                    .addToBackStack(null)
-                    .commit()
+                val detailFragment = DetailFragment().apply {
+                    arguments = bundle
+                }
+
+                if (isTablet) {
+                    // 👉 tablet: panel derecho
+                    parentFragmentManager.beginTransaction()
+                        .replace(R.id.detailContainer, detailFragment)
+                        .commit()
+                } else {
+                    // 👉 móvil: navegación normal
+                    parentFragmentManager.beginTransaction()
+                        .replace(R.id.fragmentContainerView, detailFragment)
+                        .addToBackStack(null)
+                        .commit()
+                }
             },
 
-            // ⭐ permitir marcar favoritos desde historial
             onFavClick = { fiesta ->
                 viewModel.toggleFavorito(fiesta)
             }
@@ -63,7 +74,6 @@ class HistorialFragment : Fragment() {
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.adapter = adapter
 
-        // 🔥 observar historial
         viewModel.historial.observe(viewLifecycleOwner) { historial ->
             adapter.setData(historial)
         }

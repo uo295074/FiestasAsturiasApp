@@ -7,11 +7,11 @@ import androidx.lifecycle.*
 import es.uniovi.imovil.fiestasasturias.data.FiestaRepository
 import es.uniovi.imovil.fiestasasturias.model.Fiesta
 import kotlinx.coroutines.launch
+import kotlin.math.*
 
 class FiestaViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = FiestaRepository()
-
     private val prefs = application.getSharedPreferences("fiestas_prefs", Context.MODE_PRIVATE)
 
     private val _fiestas = MutableLiveData<List<Fiesta>>()
@@ -25,53 +25,58 @@ class FiestaViewModel(application: Application) : AndroidViewModel(application) 
 
     private var listaOriginal: List<Fiesta> = emptyList()
 
+    // 📍 ubicación usuario
+    var userLat: Double? = null
+    var userLng: Double? = null
+
+    // 🎛 estado global filtros (CLAVE 🔥)
+    private var currentBusqueda: String = ""
+    private var currentLocalidad: String = ""
+    private var currentKm: Double? = null
+
+    fun setUserLocation(lat: Double, lng: Double) {
+        userLat = lat
+        userLng = lng
+
+        // 🔥 re-aplicar filtros al cambiar ubicación
+        aplicarFiltrosGlobales()
+    }
+
     fun cargarFiestas() {
         viewModelScope.launch {
             try {
                 val data = repository.getFiestas()
-                Log.d("DEBUG_API", "Fiestas recibidas: ${data.size}")
 
-                // 🔥 aplicar favoritos guardados
-                val favoritosGuardados = prefs.getStringSet("favoritos", emptySet()) ?: emptySet()
+                val favoritosGuardados =
+                    prefs.getStringSet("favoritos", emptySet()) ?: emptySet()
 
                 val listaConFavoritos = data.map {
                     it.copy(esFavorito = favoritosGuardados.contains(it.nombre))
                 }
 
                 listaOriginal = listaConFavoritos
-                _fiestas.value = listaConFavoritos
 
-                actualizarFavoritos()
+                aplicarFiltrosGlobales()
 
             } catch (e: Exception) {
                 Log.e("DEBUG_API", "ERROR: ${e.message}")
-                e.printStackTrace()
             }
         }
     }
 
-    // ⭐ TOGGLE FAVORITO
+    // ⭐ FAVORITOS
     fun toggleFavorito(fiesta: Fiesta) {
 
         val nuevos = listaOriginal.map {
-            if (it.nombre == fiesta.nombre) {
-                it.copy(esFavorito = !it.esFavorito)
-            } else it
+            if (it.nombre == fiesta.nombre) it.copy(esFavorito = !it.esFavorito) else it
         }
 
         listaOriginal = nuevos
-        _fiestas.value = nuevos
 
-        // 💾 guardar en prefs
         val favoritosSet = nuevos.filter { it.esFavorito }.map { it.nombre }.toSet()
-
         prefs.edit().putStringSet("favoritos", favoritosSet).apply()
 
-        actualizarFavoritos()
-    }
-
-    private fun actualizarFavoritos() {
-        _favoritos.value = listaOriginal.filter { it.esFavorito }
+        aplicarFiltrosGlobales()
     }
 
     // 🕓 HISTORIAL
@@ -79,41 +84,73 @@ class FiestaViewModel(application: Application) : AndroidViewModel(application) 
 
         val actuales = _historial.value?.toMutableList() ?: mutableListOf()
 
-        // evitar duplicados
         actuales.removeAll { it.nombre == fiesta.nombre }
+        actuales.add(0, fiesta)
 
-        actuales.add(0, fiesta) // añadir arriba
+        _historial.value = actuales.take(20)
 
-        _historial.value = actuales.take(20) // máximo 20
+        aplicarFiltrosGlobales()
     }
 
-    // 🔍 BUSCAR
-    fun buscar(texto: String) {
-        val resultado = listaOriginal.filter {
-            it.nombre.contains(texto, true)
-        }
-        _fiestas.value = resultado
+    // 🔍 FUNCIÓN GLOBAL (TODO PASA POR AQUÍ 🔥)
+    fun buscarFiltrarYDistancia(texto: String, localidad: String, km: Double?) {
+
+        currentBusqueda = texto
+        currentLocalidad = localidad
+        currentKm = km
+
+        aplicarFiltrosGlobales()
     }
 
-    // 🎛 FILTRAR
-    fun filtrarPorLocalidad(localidad: String) {
-        val resultado = listaOriginal.filter {
-            it.localidad.contains(localidad, true)
+    private fun aplicarFiltrosGlobales() {
+
+        val filtrada = listaOriginal.filter {
+
+            val coincideBusqueda = it.nombre.contains(currentBusqueda, true)
+            val coincideLocalidad = it.localidad.contains(currentLocalidad, true)
+            val coincideDistancia = cumpleDistancia(it, currentKm)
+
+            coincideBusqueda && coincideLocalidad && coincideDistancia
         }
-        _fiestas.value = resultado
+
+        _fiestas.value = filtrada
+
+        // 🔥 favoritos filtrados
+        _favoritos.value = filtrada.filter { it.esFavorito }
+
+        // 🔥 historial filtrado
+        _historial.value = (_historial.value ?: emptyList()).filter {
+            cumpleDistancia(it, currentKm)
+        }
     }
 
-    // 🚀 BUSCAR + FILTRAR
-    fun buscarYFiltrar(texto: String, localidad: String) {
+    // 📏 DISTANCIA
+    private fun cumpleDistancia(fiesta: Fiesta, km: Double?): Boolean {
 
-        val resultado = listaOriginal.filter {
+        val lat = userLat ?: return true
+        val lng = userLng ?: return true
 
-            val coincideBusqueda = it.nombre.contains(texto, true)
-            val coincideFiltro = it.localidad.contains(localidad, true)
+        if (km == null) return true
 
-            coincideBusqueda && coincideFiltro
-        }
+        val dist = distanciaKm(lat, lng, fiesta.latitud, fiesta.longitud)
 
-        _fiestas.value = resultado
+        return dist <= km
+    }
+
+    private fun distanciaKm(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+
+        val R = 6371.0
+
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLon = Math.toRadians(lon2 - lon1)
+
+        val a = sin(dLat / 2).pow(2) +
+                cos(Math.toRadians(lat1)) *
+                cos(Math.toRadians(lat2)) *
+                sin(dLon / 2).pow(2)
+
+        val c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+        return R * c
     }
 }
