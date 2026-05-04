@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+    id("com.google.devtools.ksp") version "2.2.10-2.0.2"
 }
 
 android {
@@ -70,7 +71,11 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-moshi:2.9.0")
     implementation("com.squareup.moshi:moshi-kotlin:1.15.1")
-    implementation("com.squareup.retrofit2:converter-moshi:2.9.0")
+
+    // Room
+    implementation("androidx.room:room-runtime:2.7.1")
+    implementation("androidx.room:room-ktx:2.7.1")
+    ksp("androidx.room:room-compiler:2.7.1")
 
     //Maps
     implementation("com.google.android.gms:play-services-maps:18.2.0")

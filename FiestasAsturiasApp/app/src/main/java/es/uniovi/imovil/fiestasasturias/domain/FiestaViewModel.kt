@@ -1,10 +1,11 @@
 package es.uniovi.imovil.fiestasasturias.domain
 
 import android.app.Application
-import android.content.Context
 import android.util.Log
 import androidx.lifecycle.*
+import es.uniovi.imovil.fiestasasturias.data.FavoritesRepository
 import es.uniovi.imovil.fiestasasturias.data.FiestaRepository
+import es.uniovi.imovil.fiestasasturias.data.local.AppDatabase
 import es.uniovi.imovil.fiestasasturias.model.Fiesta
 import kotlinx.coroutines.launch
 import kotlin.math.*
@@ -12,7 +13,9 @@ import kotlin.math.*
 class FiestaViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = FiestaRepository()
-    private val prefs = application.getSharedPreferences("fiestas_prefs", Context.MODE_PRIVATE)
+    private val favoritesRepository = FavoritesRepository(
+        AppDatabase.getInstance(application).favoriteDao()
+    )
 
     private val _fiestas = MutableLiveData<List<Fiesta>>()
     val fiestas: LiveData<List<Fiesta>> = _fiestas
@@ -47,8 +50,7 @@ class FiestaViewModel(application: Application) : AndroidViewModel(application) 
             try {
                 val data = repository.getFiestas()
 
-                val favoritosGuardados =
-                    prefs.getStringSet("favoritos", emptySet()) ?: emptySet()
+                val favoritosGuardados = favoritesRepository.getFavoriteNames()
 
                 val listaConFavoritos = data.map {
                     it.copy(esFavorito = favoritosGuardados.contains(it.nombre))
@@ -67,14 +69,20 @@ class FiestaViewModel(application: Application) : AndroidViewModel(application) 
     // ⭐ FAVORITOS
     fun toggleFavorito(fiesta: Fiesta) {
 
+        val fiestaActualizada = listaOriginal.firstOrNull { it.nombre == fiesta.nombre }
+            ?.copy(esFavorito = !fiesta.esFavorito)
+
         val nuevos = listaOriginal.map {
             if (it.nombre == fiesta.nombre) it.copy(esFavorito = !it.esFavorito) else it
         }
 
         listaOriginal = nuevos
 
-        val favoritosSet = nuevos.filter { it.esFavorito }.map { it.nombre }.toSet()
-        prefs.edit().putStringSet("favoritos", favoritosSet).apply()
+        if (fiestaActualizada != null) {
+            viewModelScope.launch {
+                favoritesRepository.setFavorite(fiestaActualizada.nombre, fiestaActualizada.esFavorito)
+            }
+        }
 
         aplicarFiltrosGlobales()
     }
