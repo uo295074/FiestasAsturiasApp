@@ -120,7 +120,7 @@ class ListFragment : Fragment() {
 
         cargarFiltros()
 
-        // 🔥 evitar recargar innecesariamente
+        // evitar recargar innecesariamente
         if (viewModel.fiestas.value == null) {
             viewModel.cargarFiestas()
         }

@@ -3,14 +3,17 @@ package es.uniovi.imovil.fiestasasturias.ui
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import es.uniovi.imovil.fiestasasturias.R
+import es.uniovi.imovil.fiestasasturias.domain.FiestaViewModel
 
 class MainActivity : AppCompatActivity() {
 
+    private val viewModel: FiestaViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -61,5 +64,7 @@ class MainActivity : AppCompatActivity() {
                 1001
             )
         }
+
+        viewModel.cargarFiestas()
     }
 }

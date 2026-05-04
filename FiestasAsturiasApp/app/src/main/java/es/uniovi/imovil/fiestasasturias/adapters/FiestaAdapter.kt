@@ -13,7 +13,7 @@ import es.uniovi.imovil.fiestasasturias.R
 
 class FiestaAdapter(
     private val onClick: (Fiesta) -> Unit,
-    private val onFavClick: (Fiesta) -> Unit   // ⭐ nuevo
+    private val onFavClick: (Fiesta) -> Unit
 ) : RecyclerView.Adapter<FiestaAdapter.ViewHolder>() {
 
     private var lista: List<Fiesta> = emptyList()
@@ -51,13 +51,13 @@ class FiestaAdapter(
             .centerCrop()
             .into(holder.image)
 
-        // ⭐ estado visual favorito
+        //  estado visual favorito
         holder.fav.setImageResource(
             if (fiesta.esFavorito) R.drawable.ic_fav_filled
             else R.drawable.ic_fav_border
         )
 
-        // ⭐ click favorito
+        //  click favorito
         holder.fav.setOnClickListener {
             onFavClick(fiesta)
         }
@@ -67,7 +67,7 @@ class FiestaAdapter(
             onClick(fiesta)
         }
 
-        // ✨ animación
+        // animación
         holder.itemView.apply {
             alpha = 0f
             translationY = 80f
