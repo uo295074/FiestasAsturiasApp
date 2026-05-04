@@ -3,9 +3,9 @@ package es.uniovi.imovil.fiestasasturias.ui
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import es.uniovi.imovil.fiestasasturias.R
@@ -14,11 +14,26 @@ import es.uniovi.imovil.fiestasasturias.domain.FiestaViewModel
 class MainActivity : AppCompatActivity() {
 
     private val viewModel: FiestaViewModel by viewModels()
+
+    //  API MODERNA DE PERMISOS
+    private val locationPermissionLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted: Boolean ->
+
+            if (isGranted) {
+                //  permiso concedido → recargamos para inicializar ubicación
+                recreate()
+            } else {
+                //  permiso denegado (puedes mostrar mensaje si quieres)
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // 🔥 Fragment inicial (SIEMPRE igual en móvil y tablet)
+        // 🔥 Fragment inicial
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
                 .replace(R.id.fragmentContainerView, HomeFragment())
@@ -52,19 +67,27 @@ class MainActivity : AppCompatActivity() {
             true
         }
 
-        // 📍 Permisos ubicación (solo aquí, correcto)
-        if (ContextCompat.checkSelfPermission(
+        // 📍 PEDIR PERMISO (API NUEVA)
+        checkLocationPermission()
+
+        // 🔥 cargar datos
+        viewModel.cargarFiestas()
+    }
+
+    private fun checkLocationPermission() {
+
+        when {
+            ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                1001
-            )
-        }
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                // ya concedido → no hacemos nada
+            }
 
-        viewModel.cargarFiestas()
+            else -> {
+                //  lanzar petición
+                locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            }
+        }
     }
 }

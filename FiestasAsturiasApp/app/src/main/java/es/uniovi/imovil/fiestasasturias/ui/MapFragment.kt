@@ -114,7 +114,7 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
 
     override fun onResume() {
         super.onResume()
-        obtenerUbicacionUsuario() // 🔥 se actualiza siempre
+        obtenerUbicacionUsuario()
     }
 
     private fun obtenerUbicacionUsuario() {
