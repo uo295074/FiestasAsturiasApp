@@ -23,6 +23,7 @@ class ListFragment : Fragment() {
     private val PREFS_NAME = "filtros_prefs"
     private val KEY_BUSQUEDA = "busqueda"
     private val KEY_LOCALIDAD = "localidad"
+    private val KEY_KM = "km"
 
     private var kmActual: Double = 50.0
 
@@ -102,6 +103,7 @@ class ListFragment : Fragment() {
 
             kmActual = value.toDouble()
             binding.textKm.text = "${kmActual.toInt()} km"
+            guardarKm(kmActual)
 
             aplicarFiltros()
         }
@@ -151,8 +153,16 @@ class ListFragment : Fragment() {
 
         val busqueda = prefs.getString(KEY_BUSQUEDA, "") ?: ""
         val localidad = prefs.getString(KEY_LOCALIDAD, "") ?: ""
+        kmActual = prefs.getFloat(KEY_KM, 50f).toDouble()
 
         binding.searchInput.setText(busqueda)
         binding.spinnerLocalidad.setText(localidad, false)
+        binding.sliderKm.value = kmActual.toFloat()
+        binding.textKm.text = "${kmActual.toInt()} km"
+    }
+
+    private fun guardarKm(km: Double) {
+        val prefs = requireContext().getSharedPreferences(PREFS_NAME, 0)
+        prefs.edit().putFloat(KEY_KM, km.toFloat()).apply()
     }
 }

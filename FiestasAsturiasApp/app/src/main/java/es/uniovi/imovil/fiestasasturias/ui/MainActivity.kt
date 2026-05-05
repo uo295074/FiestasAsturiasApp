@@ -14,6 +14,11 @@ import es.uniovi.imovil.fiestasasturias.domain.FiestaViewModel
 class MainActivity : AppCompatActivity() {
 
     private val viewModel: FiestaViewModel by viewModels()
+    private var selectedNavItemId: Int = R.id.nav_home
+
+    companion object {
+        private const val KEY_SELECTED_NAV = "selected_nav"
+    }
 
     //  API MODERNA DE PERMISOS
     private val locationPermissionLauncher =
@@ -34,6 +39,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        selectedNavItemId = savedInstanceState?.getInt(KEY_SELECTED_NAV, R.id.nav_home) ?: R.id.nav_home
+
         // 🔥 Fragment inicial
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
@@ -44,6 +51,7 @@ class MainActivity : AppCompatActivity() {
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNav)
 
         bottomNav.setOnItemSelectedListener {
+            selectedNavItemId = it.itemId
 
             val fragment = when (it.itemId) {
                 R.id.nav_home -> HomeFragment()
@@ -68,11 +76,22 @@ class MainActivity : AppCompatActivity() {
             true
         }
 
+        if (savedInstanceState != null) {
+            bottomNav.selectedItemId = selectedNavItemId
+        }
+
         // 📍 PEDIR PERMISO (API NUEVA)
         checkLocationPermission()
 
         // 🔥 cargar datos
-        viewModel.cargarFiestas()
+        if (viewModel.fiestas.value == null) {
+            viewModel.cargarFiestas()
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putInt(KEY_SELECTED_NAV, selectedNavItemId)
+        super.onSaveInstanceState(outState)
     }
 
     private fun checkLocationPermission() {
