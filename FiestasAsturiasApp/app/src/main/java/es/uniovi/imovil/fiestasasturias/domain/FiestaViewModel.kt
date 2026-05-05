@@ -23,6 +23,9 @@ class FiestaViewModel(application: Application) : AndroidViewModel(application) 
     private val _favoritos = MutableLiveData<List<Fiesta>>()
     val favoritos: LiveData<List<Fiesta>> = _favoritos
 
+    private val _localidades = MutableLiveData<List<String>>()
+    val localidades: LiveData<List<String>> = _localidades
+
     private val _historial = MutableLiveData<List<Fiesta>>()
     val historial: LiveData<List<Fiesta>> = _historial
 
@@ -57,6 +60,7 @@ class FiestaViewModel(application: Application) : AndroidViewModel(application) 
                 }
 
                 listaOriginal = listaConFavoritos
+                _localidades.value = listaConFavoritos.map { it.localidad }.distinct().sorted()
 
                 aplicarFiltrosGlobales()
 

@@ -4,6 +4,7 @@
     <string name="search_hint">Buscar fiesta...</string>
     <string name="filter_hint">Filtrar por localidad</string>
     <string name="distance_filter">Filtrar por distancia (km)</string>
+    <string name="all_locations">Todas las localidades</string>
 
     <string name="dark_mode">Modo oscuro</string>
     <string name="language">Idioma</string>

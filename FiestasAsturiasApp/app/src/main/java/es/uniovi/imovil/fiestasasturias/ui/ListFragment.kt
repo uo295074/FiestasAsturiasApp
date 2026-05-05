@@ -1,6 +1,8 @@
 package es.uniovi.imovil.fiestasasturias.ui
 
 import android.os.Bundle
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -13,6 +15,7 @@ import es.uniovi.imovil.fiestasasturias.domain.FiestaViewModel
 import androidx.core.widget.addTextChangedListener
 import android.widget.ArrayAdapter
 import androidx.fragment.app.activityViewModels
+import android.content.Context
 
 class ListFragment : Fragment() {
 
@@ -86,8 +89,10 @@ class ListFragment : Fragment() {
         viewModel.fiestas.observe(viewLifecycleOwner) { fiestas ->
 
             adapter.setData(fiestas)
+        }
 
-            val localidades = fiestas.map { it.localidad }.distinct().sorted()
+        viewModel.localidades.observe(viewLifecycleOwner) { localidadesBase ->
+            val localidades = listOf(getString(R.string.all_locations)) + localidadesBase
 
             val adapterLocalidades = ArrayAdapter(
                 requireContext(),
@@ -114,10 +119,27 @@ class ListFragment : Fragment() {
             aplicarFiltros()
         }
 
+        binding.searchInput.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE) {
+                ocultarTeclado()
+                true
+            } else {
+                false
+            }
+        }
+
         // 🎛 FILTRO
         binding.spinnerLocalidad.addTextChangedListener {
             guardarFiltros(binding.searchInput.text.toString(), it.toString())
             aplicarFiltros()
+            ocultarTeclado()
+        }
+
+        binding.recyclerView.setOnTouchListener { v, _ ->
+            v.performClick()
+            binding.searchInput.clearFocus()
+            ocultarTeclado()
+            false
         }
 
         cargarFiltros()
@@ -131,7 +153,8 @@ class ListFragment : Fragment() {
     private fun aplicarFiltros() {
 
         val texto = binding.searchInput.text.toString()
-        val localidad = binding.spinnerLocalidad.text.toString()
+        val localidadSeleccionada = binding.spinnerLocalidad.text.toString()
+        val localidad = if (localidadSeleccionada == getString(R.string.all_locations)) "" else localidadSeleccionada
 
         viewModel.buscarFiltrarYDistancia(
             texto,
@@ -141,10 +164,11 @@ class ListFragment : Fragment() {
     }
 
     private fun guardarFiltros(busqueda: String, localidad: String) {
+        val localidadNormalizada = if (localidad == getString(R.string.all_locations)) "" else localidad
         val prefs = requireContext().getSharedPreferences(PREFS_NAME, 0)
         prefs.edit()
             .putString(KEY_BUSQUEDA, busqueda)
-            .putString(KEY_LOCALIDAD, localidad)
+            .putString(KEY_LOCALIDAD, localidadNormalizada)
             .apply()
     }
 
@@ -156,7 +180,11 @@ class ListFragment : Fragment() {
         kmActual = prefs.getFloat(KEY_KM, 50f).toDouble()
 
         binding.searchInput.setText(busqueda)
-        binding.spinnerLocalidad.setText(localidad, false)
+        if (localidad.isBlank()) {
+            binding.spinnerLocalidad.setText(getString(R.string.all_locations), false)
+        } else {
+            binding.spinnerLocalidad.setText(localidad, false)
+        }
         binding.sliderKm.value = kmActual.toFloat()
         binding.textKm.text = "${kmActual.toInt()} km"
     }
@@ -164,5 +192,10 @@ class ListFragment : Fragment() {
     private fun guardarKm(km: Double) {
         val prefs = requireContext().getSharedPreferences(PREFS_NAME, 0)
         prefs.edit().putFloat(KEY_KM, km.toFloat()).apply()
+    }
+
+    private fun ocultarTeclado() {
+        val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(binding.root.windowToken, 0)
     }
 }
