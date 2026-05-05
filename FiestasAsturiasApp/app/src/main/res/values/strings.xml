@@ -21,6 +21,18 @@
     <string name="home">Inicio</string>
 
     <string name="back">Volver</string>
+    <string name="detail_information">Informacion</string>
+    <string name="detail_dates">Fechas y dias</string>
+    <string name="detail_contact">Contacto</string>
+    <string name="detail_social">Redes sociales</string>
+    <string name="detail_email">Email</string>
+    <string name="detail_web">Web</string>
+    <string name="detail_facebook">Facebook</string>
+    <string name="detail_instagram">Instagram</string>
+    <string name="detail_twitter">Twitter</string>
+    <string name="detail_youtube">YouTube</string>
+    <string name="detail_pinterest">Pinterest</string>
+    <string name="detail_rss">RSS</string>
 
     <string name="title_phrase">Descubre las mejores fiestas, eventos y tradiciones de Asturias</string>
     <string name="title_explore">Explora</string>

@@ -52,6 +52,7 @@ class FiestaViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             try {
                 val data = repository.getFiestas()
+                Log.d("DEBUG_API", "📦 Fiestas recibidas: ${data.size}")
 
                 val favoritosGuardados = favoritesRepository.getFavoriteNames()
 

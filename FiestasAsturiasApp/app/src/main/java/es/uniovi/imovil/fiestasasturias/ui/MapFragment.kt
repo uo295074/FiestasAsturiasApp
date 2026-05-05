@@ -85,6 +85,19 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
                     putString("descripcion", it.descripcion)
                     putString("localidad", it.localidad)
                     putString("imagen", it.imagen)
+                    putString("email", it.email)
+                    putString("web", it.web)
+                    putString("dias", it.dias)
+                    putString("facebook", it.facebook)
+                    putString("instagram", it.instagram)
+                    putString("twitter", it.twitter)
+                    putString("youtube", it.youtube)
+                    putString("pinterest", it.pinterest)
+                    putString("rss", it.rss)
+                    putStringArrayList(
+                        "otrosCanales",
+                        ArrayList(it.otrosCanales.map { pair -> "${pair.first}: ${pair.second}" })
+                    )
                 }
 
                 parentFragmentManager.beginTransaction()

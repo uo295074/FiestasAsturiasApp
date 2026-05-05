@@ -48,6 +48,19 @@ class FavoritosFragment : Fragment() {
                     putString("descripcion", fiesta.descripcion)
                     putString("localidad", fiesta.localidad)
                     putString("imagen", fiesta.imagen)
+                    putString("email", fiesta.email)
+                    putString("web", fiesta.web)
+                    putString("dias", fiesta.dias)
+                    putString("facebook", fiesta.facebook)
+                    putString("instagram", fiesta.instagram)
+                    putString("twitter", fiesta.twitter)
+                    putString("youtube", fiesta.youtube)
+                    putString("pinterest", fiesta.pinterest)
+                    putString("rss", fiesta.rss)
+                    putStringArrayList(
+                        "otrosCanales",
+                        ArrayList(fiesta.otrosCanales.map { "${it.first}: ${it.second}" })
+                    )
                 }
 
                 val detailFragment = DetailFragment().apply {
