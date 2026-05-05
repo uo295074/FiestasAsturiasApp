@@ -3,10 +3,13 @@ package es.uniovi.imovil.fiestasasturias.ui
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import androidx.core.app.ActivityCompat
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import es.uniovi.imovil.fiestasasturias.R
 import es.uniovi.imovil.fiestasasturias.domain.FiestaViewModel
@@ -27,8 +30,7 @@ class MainActivity : AppCompatActivity() {
         ) { isGranted: Boolean ->
 
             if (isGranted) {
-                //  permiso concedido → recargamos para inicializar ubicación
-                recreate()
+                fetchUserLocation()
             } else {
                 //  permiso denegado (puedes mostrar mensaje si quieres)
             }
@@ -94,6 +96,11 @@ class MainActivity : AppCompatActivity() {
         super.onSaveInstanceState(outState)
     }
 
+    override fun onResume() {
+        super.onResume()
+        fetchUserLocation()
+    }
+
     private fun checkLocationPermission() {
 
         when {
@@ -101,12 +108,43 @@ class MainActivity : AppCompatActivity() {
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED -> {
-                // ya concedido → no hacemos nada
+                fetchUserLocation()
             }
 
             else -> {
                 //  lanzar petición
                 locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            }
+        }
+    }
+
+    private fun fetchUserLocation() {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+
+        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+            if (location != null) {
+                viewModel.setUserLocation(location.latitude, location.longitude)
+            }
+        }
+
+        fusedLocationClient.getCurrentLocation(
+            Priority.PRIORITY_HIGH_ACCURACY,
+            null
+        ).addOnSuccessListener { location ->
+            if (location != null) {
+                viewModel.setUserLocation(location.latitude, location.longitude)
             }
         }
     }
