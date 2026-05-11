@@ -6,11 +6,16 @@ import android.os.Bundle
 import androidx.core.app.ActivityCompat
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.drawerlayout.widget.DrawerLayout
+import androidx.core.view.GravityCompat
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.navigation.NavigationView
 import es.uniovi.imovil.fiestasasturias.R
 import es.uniovi.imovil.fiestasasturias.domain.FiestaViewModel
 
@@ -18,6 +23,8 @@ class MainActivity : AppCompatActivity() {
 
     private val viewModel: FiestaViewModel by viewModels()
     private var selectedNavItemId: Int = R.id.nav_home
+    private lateinit var drawerLayout: DrawerLayout
+    private lateinit var bottomNav: BottomNavigationView
 
     companion object {
         private const val KEY_SELECTED_NAV = "selected_nav"
@@ -43,6 +50,28 @@ class MainActivity : AppCompatActivity() {
 
         selectedNavItemId = savedInstanceState?.getInt(KEY_SELECTED_NAV, R.id.nav_home) ?: R.id.nav_home
 
+        drawerLayout = findViewById(R.id.drawerLayout)
+        bottomNav = findViewById(R.id.bottomNav)
+        val topBar = findViewById<MaterialToolbar>(R.id.topBar)
+        val navigationView = findViewById<NavigationView>(R.id.navigationView)
+
+        setSupportActionBar(topBar)
+        val toggle = ActionBarDrawerToggle(
+            this,
+            drawerLayout,
+            topBar,
+            R.string.navigation_open,
+            R.string.navigation_close
+        )
+        drawerLayout.addDrawerListener(toggle)
+        toggle.syncState()
+
+        navigationView.setNavigationItemSelectedListener { item ->
+            val handled = navigateTo(item.itemId)
+            drawerLayout.closeDrawer(GravityCompat.START)
+            handled
+        }
+
         // 🔥 Fragment inicial
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
@@ -50,32 +79,9 @@ class MainActivity : AppCompatActivity() {
                 .commit()
         }
 
-        val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNav)
-
         bottomNav.setOnItemSelectedListener {
             selectedNavItemId = it.itemId
-
-            val fragment = when (it.itemId) {
-                R.id.nav_home -> HomeFragment()
-                R.id.nav_list -> ListFragment()
-                R.id.nav_map -> MapFragment()
-                R.id.nav_fav -> FavoritosFragment()
-                R.id.nav_history -> HistorialFragment()
-                R.id.nav_settings -> SettingsFragment()
-                else -> null
-            }
-
-            fragment?.let {
-                supportFragmentManager.beginTransaction()
-                    .setCustomAnimations(
-                        android.R.anim.fade_in,
-                        android.R.anim.fade_out
-                    )
-                    .replace(R.id.fragmentContainerView, it)
-                    .commit()
-            }
-
-            true
+            navigateTo(it.itemId)
         }
 
         if (savedInstanceState != null) {
@@ -99,6 +105,41 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         fetchUserLocation()
+    }
+
+    fun openHistoryFromSettings() {
+        selectedNavItemId = R.id.nav_settings
+        supportFragmentManager.beginTransaction()
+            .setCustomAnimations(
+                android.R.anim.fade_in,
+                android.R.anim.fade_out
+            )
+            .replace(R.id.fragmentContainerView, HistorialFragment())
+            .addToBackStack(null)
+            .commit()
+    }
+
+    private fun navigateTo(itemId: Int): Boolean {
+        val fragment = when (itemId) {
+            R.id.nav_home -> HomeFragment()
+            R.id.nav_list -> ListFragment()
+            R.id.nav_map -> MapFragment()
+            R.id.nav_fav -> FavoritosFragment()
+            R.id.nav_settings -> SettingsFragment()
+            else -> null
+        }
+
+        fragment?.let {
+            supportFragmentManager.beginTransaction()
+                .setCustomAnimations(
+                    android.R.anim.fade_in,
+                    android.R.anim.fade_out
+                )
+                .replace(R.id.fragmentContainerView, it)
+                .commit()
+            return true
+        }
+        return false
     }
 
     private fun checkLocationPermission() {

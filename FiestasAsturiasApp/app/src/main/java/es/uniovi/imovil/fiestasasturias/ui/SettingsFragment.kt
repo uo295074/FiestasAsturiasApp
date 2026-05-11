@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment
 import es.uniovi.imovil.fiestasasturias.R
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
+import com.google.android.material.button.MaterialButton
 
 class SettingsFragment : Fragment(R.layout.fragment_settings) {
 
@@ -20,6 +21,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
 
         val switchDarkMode = view.findViewById<SwitchMaterial>(R.id.switchDarkMode)
         val languageSelector = view.findViewById<MaterialAutoCompleteTextView>(R.id.languageSelector)
+        val btnOpenHistory = view.findViewById<MaterialButton>(R.id.btnOpenHistory)
 
         val prefs = requireContext().getSharedPreferences(AppPreferences.PREFS, Context.MODE_PRIVATE)
         val isDarkMode = prefs.getBoolean(AppPreferences.KEY_DARK_MODE, false)
@@ -53,6 +55,10 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
             prefs.edit().putString(AppPreferences.KEY_LANGUAGE, selectedLanguage).apply()
             AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(selectedLanguage))
             requireActivity().recreate()
+        }
+
+        btnOpenHistory.setOnClickListener {
+            (activity as? MainActivity)?.openHistoryFromSettings()
         }
     }
 

@@ -13,6 +13,8 @@
     <string name="language_english">Ingles</string>
     <string name="settings">Configuración</string>
     <string name="dark_mode_indication">Activa el tema oscuro de la app</string>
+    <string name="history_indication">Consulta las ultimas fiestas visitadas</string>
+    <string name="open_history">Abrir historial</string>
 
     <string name="favorites">Favoritos</string>
     <string name="history">Historial</string>
@@ -39,4 +41,6 @@
     <string name="title_indication">Usa la barra inferior para ver la lista o el mapa</string>
 
     <string name="your_location">Tu ubicación</string>
+    <string name="navigation_open">Abrir menu de navegacion</string>
+    <string name="navigation_close">Cerrar menu de navegacion</string>
 </resources>
