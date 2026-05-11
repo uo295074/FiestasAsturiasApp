@@ -5,17 +5,17 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <!-- 🎯 PRIMARY (moderno Material) -->
-    <color name="primary">#6750A4</color>
-    <color name="primaryVariant">#4F378B</color>
+    <!-- 🎯 PRIMARY (Asturias blue) -->
+    <color name="primary">#005BBB</color>
+    <color name="primaryVariant">#004A98</color>
     <color name="onPrimary">#FFFFFF</color>
 
-    <!-- 🎯 SECONDARY -->
-    <color name="secondary">#03DAC5</color>
-    <color name="onSecondary">#000000</color>
+    <!-- 🎯 SECONDARY (Asturias yellow) -->
+    <color name="secondary">#FFD500</color>
+    <color name="onSecondary">#1A1A1A</color>
 
     <!-- 🌫 BACKGROUND -->
-    <color name="background">#F7F7F7</color>
+    <color name="background">#F3F7FC</color>
     <color name="surface">#FFFFFF</color>
 
     <!-- 🧱 TEXTOS -->
@@ -24,5 +24,9 @@
 
     <!-- ✨ DIVISORES / BORDES -->
     <color name="border">#E0E0E0</color>
+
+    <!-- Navigation accents -->
+    <color name="navItemSelected">#FFD500</color>
+    <color name="navItemUnselected">#2F5F93</color>
 
 </resources>
