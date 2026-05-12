@@ -1,0 +1,62 @@
+<resources>
+    <string name="app_name">Asturias Festivals</string>
+
+    <string name="search_hint">Search festival...</string>
+    <string name="filter_hint">Filter by location</string>
+    <string name="zone_filter_hint">Filter by area</string>
+    <string name="distance_filter">Filter by distance (km)</string>
+    <string name="filters">Filters</string>
+    <string name="filters_indication">Search by location, area and nearby distance</string>
+    <string name="distance_inactive">No distance filter</string>
+    <string name="distance_active_value">%1$d km max</string>
+    <string name="all_locations">All locations</string>
+    <string name="all_zones">All areas</string>
+
+    <string name="dark_mode">Dark mode</string>
+    <string name="language">Language</string>
+    <string name="language_indication">Select the app language</string>
+    <string name="language_spanish">Spanish</string>
+    <string name="language_english">English</string>
+    <string name="settings">Settings</string>
+    <string name="dark_mode_indication">Turn on dark mode</string>
+    <string name="history_indication">Check the latest visited festivals</string>
+    <string name="open_history">Open history</string>
+
+    <string name="favorites">Favorites</string>
+    <string name="history">History</string>
+    <string name="list">List</string>
+    <string name="map">Map</string>
+    <string name="home">Home</string>
+
+    <string name="back">Back</string>
+    <string name="previous">Previous</string>
+    <string name="next">Next</string>
+    <string name="detail_information">Information</string>
+    <string name="detail_dates">Dates and days</string>
+    <string name="detail_contact">Contact</string>
+    <string name="detail_social">Social media</string>
+    <string name="detail_email">Email</string>
+    <string name="detail_web">Website</string>
+    <string name="detail_zone">Area</string>
+    <string name="detail_facebook">Facebook</string>
+    <string name="detail_instagram">Instagram</string>
+    <string name="detail_twitter">Twitter</string>
+    <string name="detail_youtube">YouTube</string>
+    <string name="detail_pinterest">Pinterest</string>
+    <string name="detail_rss">RSS</string>
+
+    <string name="title_phrase">Explore the best parties, events, and traditions in Asturias</string>
+    <string name="title_explore">Explore</string>
+    <string name="title_indication">Use the bottom bar to view the list or the map</string>
+    <string name="home_badge">Local festival guide</string>
+    <string name="home_featured_title">Your Asturias festive agenda</string>
+    <string name="home_featured_subtitle">Check plans all year round with clear information, location and contact</string>
+    <string name="home_block_1">Filter by location, area and distance</string>
+    <string name="home_block_1_desc">Find nearby festivals in seconds</string>
+    <string name="home_block_2">Save favorites and review history</string>
+    <string name="home_block_2_desc">Mark your preferred events and revisit what you already checked</string>
+
+    <string name="your_location">Your location</string>
+    <string name="navigation_open">Open navigation menu</string>
+    <string name="navigation_close">Close navigation menu</string>
+</resources>

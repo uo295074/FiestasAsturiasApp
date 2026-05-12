@@ -1,0 +1,14 @@
+<resources>
+    <color name="background">#0B1320</color>
+    <color name="primary">#3A8DFF</color>
+    <color name="primaryVariant">#2B6FCC</color>
+    <color name="onPrimary">#F6FAFF</color>
+    <color name="secondary">#FFD84D</color>
+    <color name="onSecondary">#1A1A1A</color>
+    <color name="surface">#121D2F</color>
+    <color name="textPrimary">#F2F2F2</color>
+    <color name="textSecondary">#CFD8E6</color>
+    <color name="border">#2A3B55</color>
+    <color name="navItemSelected">#FFD84D</color>
+    <color name="navItemUnselected">#8BB9FF</color>
+</resources>
