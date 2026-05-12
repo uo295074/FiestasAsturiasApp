@@ -8,6 +8,7 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItemAtPosition
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDescendantOfA
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -18,6 +19,7 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.rule.GrantPermissionRule
+import com.adevinta.android.barista.interaction.BaristaClickInteractions.clickOn
 import com.adevinta.android.barista.assertion.BaristaVisibilityAssertions.assertDisplayed
 import com.adevinta.android.barista.interaction.BaristaEditTextInteractions.writeTo
 import es.uniovi.imovil.fiestasasturias.ui.MainActivity
@@ -53,7 +55,7 @@ class UiFlowsEspressoBaristaTest {
         onView(withId(R.id.switchDarkMode)).check(matches(isDisplayed()))
 
         clickBottomNavItem(R.id.nav_home)
-        assertDisplayed(R.string.title_explore)
+        assertDisplayed(R.string.title_phrase)
     }
 
     @Test
@@ -80,6 +82,29 @@ class UiFlowsEspressoBaristaTest {
         clickBottomNavItem(R.id.nav_fav)
 
         assertDisplayed(firstTitle)
+        onView(withId(R.id.searchLayout)).check(matches(withEffectiveVisibility(Visibility.GONE)))
+    }
+
+    @Test
+    fun detalle_clickEnFiestaAbreDetalleYPermiteVolver() {
+        clickBottomNavItem(R.id.nav_list)
+        waitForRecyclerItems(activityRule.scenario, R.id.recyclerView)
+
+        onView(withId(R.id.recyclerView)).perform(actionOnItemAtPosition<RecyclerView.ViewHolder>(0, click()))
+
+        onView(withId(R.id.btnBack)).check(matches(isDisplayed()))
+        onView(withId(R.id.imagePager)).check(matches(isDisplayed()))
+
+        onView(withId(R.id.btnBack)).perform(click())
+        onView(withId(R.id.recyclerView)).check(matches(isDisplayed()))
+    }
+
+    @Test
+    fun ajustes_botonHistorialAbrePantallaHistorial() {
+        clickBottomNavItem(R.id.nav_settings)
+        clickOn(R.id.btnOpenHistory)
+
+        onView(withId(R.id.recyclerView)).check(matches(isDisplayed()))
         onView(withId(R.id.searchLayout)).check(matches(withEffectiveVisibility(Visibility.GONE)))
     }
 
