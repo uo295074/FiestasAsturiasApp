@@ -20,14 +20,51 @@
             android:textAllCaps="false"
             app:icon="@android:drawable/ic_media_previous" />
 
-        <ImageView
-            android:id="@+id/image"
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="220dp"
-            android:layout_marginTop="12dp"
-            android:adjustViewBounds="true"
-            android:contentDescription="@null"
-            android:scaleType="centerCrop" />
+            android:layout_marginTop="12dp">
+
+            <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/imagePager"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null" />
+
+            <ImageButton
+                android:id="@+id/btnPrevImage"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_gravity="center_vertical|start"
+                android:layout_marginStart="8dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/previous"
+                android:padding="6dp"
+                android:src="@android:drawable/ic_media_previous"
+                android:tint="@color/onPrimary" />
+
+            <ImageButton
+                android:id="@+id/btnNextImage"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_gravity="center_vertical|end"
+                android:layout_marginEnd="8dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/next"
+                android:padding="6dp"
+                android:src="@android:drawable/ic_media_next"
+                android:tint="@color/onPrimary" />
+
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/imageCounter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginTop="6dp"
+            android:textColor="@color/textSecondary"
+            android:textSize="12sp" />
 
         <TextView
             android:id="@+id/title"
@@ -45,6 +82,14 @@
             android:layout_marginTop="6dp"
             android:textColor="@color/primary"
             android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/zone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="@color/textSecondary"
+            android:textSize="13sp" />
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardInfo"

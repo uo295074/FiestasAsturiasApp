@@ -9,8 +9,9 @@ import android.view.*
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import com.bumptech.glide.Glide
+import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.button.MaterialButton
+import es.uniovi.imovil.fiestasasturias.adapters.DetailImagePagerAdapter
 import es.uniovi.imovil.fiestasasturias.databinding.FragmentDetailBinding
 import android.view.animation.DecelerateInterpolator
 import es.uniovi.imovil.fiestasasturias.R
@@ -38,7 +39,9 @@ class DetailFragment : Fragment() {
         val nombre = arguments?.getString("nombre")
         val descripcion = arguments?.getString("descripcion")
         val localidad = arguments?.getString("localidad")
+        val zona = arguments?.getString("zona")
         val imagen = arguments?.getString("imagen")
+        val imagenes = arguments?.getStringArrayList("imagenes") ?: arrayListOf()
         val email = arguments?.getString("email")
         val web = arguments?.getString("web")
         val dias = arguments?.getString("dias")
@@ -52,6 +55,9 @@ class DetailFragment : Fragment() {
 
         binding.title.text = nombre
         binding.location.text = localidad
+        val zoneText = formatWithLabel(getString(R.string.detail_zone), zona)
+        binding.zone.text = zoneText
+        binding.zone.visibility = if (zoneText.isNullOrBlank()) View.GONE else View.VISIBLE
         binding.description.text = fromHtml(descripcion)
 
         val datesText = fromHtml(dias)
@@ -81,11 +87,8 @@ class DetailFragment : Fragment() {
         renderSocialButtons(socialButtons)
         binding.cardSocial.visibility = if (socialButtons.isEmpty()) View.GONE else View.VISIBLE
 
-        Glide.with(requireContext())
-            .load(imagen)
-            .placeholder(R.drawable.ic_launcher_background)
-            .centerCrop()
-            .into(binding.image)
+        val galleryImages = imagenes.ifEmpty { listOfNotNull(imagen) }
+        setupImageGallery(galleryImages)
 
         // ✨ ANIMACIÓN DE ENTRADA (PRO)
         binding.root.apply {
@@ -168,6 +171,58 @@ class DetailFragment : Fragment() {
             }
             binding.socialButtonsContainer.addView(button, params)
         }
+    }
+
+    private fun setupImageGallery(images: List<String>) {
+        if (images.isEmpty()) {
+            binding.imageCounter.visibility = View.GONE
+            binding.btnPrevImage.visibility = View.GONE
+            binding.btnNextImage.visibility = View.GONE
+            return
+        }
+
+        binding.imagePager.adapter = DetailImagePagerAdapter(images)
+
+        if (images.size == 1) {
+            binding.imageCounter.visibility = View.GONE
+            binding.btnPrevImage.visibility = View.GONE
+            binding.btnNextImage.visibility = View.GONE
+            return
+        }
+
+        binding.imageCounter.visibility = View.VISIBLE
+        binding.imageCounter.text = "1/${images.size}"
+        binding.btnPrevImage.visibility = View.VISIBLE
+        binding.btnNextImage.visibility = View.VISIBLE
+
+        binding.btnPrevImage.setOnClickListener {
+            val current = binding.imagePager.currentItem
+            if (current > 0) {
+                binding.imagePager.currentItem = current - 1
+            }
+        }
+
+        binding.btnNextImage.setOnClickListener {
+            val current = binding.imagePager.currentItem
+            if (current < images.lastIndex) {
+                binding.imagePager.currentItem = current + 1
+            }
+        }
+
+        fun updateArrowState(position: Int) {
+            binding.btnPrevImage.alpha = if (position == 0) 0.35f else 1f
+            binding.btnNextImage.alpha = if (position == images.lastIndex) 0.35f else 1f
+            binding.btnPrevImage.isEnabled = position != 0
+            binding.btnNextImage.isEnabled = position != images.lastIndex
+        }
+
+        updateArrowState(0)
+        binding.imagePager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                binding.imageCounter.text = "${position + 1}/${images.size}"
+                updateArrowState(position)
+            }
+        })
     }
 
     private fun dpToPx(dp: Int): Int {

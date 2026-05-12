@@ -24,6 +24,11 @@
             android:layout_height="200dp"
             android:scaleType="centerCrop"/>
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:background="@drawable/bg_card_image_scrim" />
+
         <!-- ⭐ FAVORITO -->
         <ImageView
             android:id="@+id/favIcon"
@@ -42,6 +47,7 @@
     <LinearLayout
         android:orientation="vertical"
         android:padding="14dp"
+        android:background="@android:color/transparent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -50,7 +56,11 @@
             android:id="@+id/title"
             android:textSize="20sp"
             android:textStyle="bold"
-            android:textColor="@color/textPrimary"
+            android:textColor="@android:color/white"
+            android:shadowColor="#CC000000"
+            android:shadowDx="0"
+            android:shadowDy="1"
+            android:shadowRadius="3"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
@@ -58,19 +68,12 @@
         <TextView
             android:id="@+id/location"
             android:textSize="14sp"
-            android:textColor="@color/primary"
+            android:textColor="@android:color/white"
+            android:shadowColor="#CC000000"
+            android:shadowDx="0"
+            android:shadowDy="1"
+            android:shadowRadius="3"
             android:layout_marginTop="6dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-
-        <!-- 📝 DESCRIPCIÓN -->
-        <TextView
-            android:id="@+id/description"
-            android:maxLines="2"
-            android:ellipsize="end"
-            android:textSize="14sp"
-            android:textColor="@color/textSecondary"
-            android:layout_marginTop="8dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 

@@ -3,8 +3,14 @@
 
     <string name="search_hint">Buscar fiesta...</string>
     <string name="filter_hint">Filtrar por localidad</string>
+    <string name="zone_filter_hint">Filtrar por zona</string>
     <string name="distance_filter">Filtrar por distancia (km)</string>
+    <string name="filters">Filtros</string>
+    <string name="filters_indication">Busca por localidad, zona y cercania</string>
+    <string name="distance_inactive">Sin filtro de distancia</string>
+    <string name="distance_active_value">%1$d km maximo</string>
     <string name="all_locations">Todas las localidades</string>
+    <string name="all_zones">Todas las zonas</string>
 
     <string name="dark_mode">Modo oscuro</string>
     <string name="language">Idioma</string>
@@ -23,12 +29,15 @@
     <string name="home">Inicio</string>
 
     <string name="back">Volver</string>
+    <string name="previous">Anterior</string>
+    <string name="next">Siguiente</string>
     <string name="detail_information">Informacion</string>
     <string name="detail_dates">Fechas y dias</string>
     <string name="detail_contact">Contacto</string>
     <string name="detail_social">Redes sociales</string>
     <string name="detail_email">Email</string>
     <string name="detail_web">Web</string>
+    <string name="detail_zone">Zona</string>
     <string name="detail_facebook">Facebook</string>
     <string name="detail_instagram">Instagram</string>
     <string name="detail_twitter">Twitter</string>
@@ -39,6 +48,13 @@
     <string name="title_phrase">Descubre las mejores fiestas, eventos y tradiciones de Asturias</string>
     <string name="title_explore">Explora</string>
     <string name="title_indication">Usa la barra inferior para ver la lista o el mapa</string>
+    <string name="home_badge">Guia local de fiestas</string>
+    <string name="home_featured_title">Tu agenda festiva de Asturias</string>
+    <string name="home_featured_subtitle">Consulta planes de todo el ano con informacion clara, ubicacion y contacto</string>
+    <string name="home_block_1">Filtra por localidad, zona y distancia</string>
+    <string name="home_block_1_desc">Encuentra en segundos las fiestas que te quedan cerca</string>
+    <string name="home_block_2">Guarda favoritos y revisa historial</string>
+    <string name="home_block_2_desc">Marca tus eventos preferidos y recupera lo que ya visitaste</string>
 
     <string name="your_location">Tu ubicación</string>
     <string name="navigation_open">Abrir menu de navegacion</string>

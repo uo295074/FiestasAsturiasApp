@@ -45,9 +45,11 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation("androidx.test:rules:1.6.1")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    androidTestImplementation("androidx.test:runner:1.5.2")
+    androidTestImplementation("androidx.test:rules:1.5.0")
+    androidTestImplementation("com.adevinta.android:barista:4.3.0")
     // ViewModel + LiveData
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.7.0")
@@ -65,7 +67,7 @@ dependencies {
     // Glide (imagenes)
     implementation("com.github.bumptech.glide:glide:4.16.0")
 
-    // Maps (LO USAREMOS)
+    // Maps
     implementation("com.google.android.gms:play-services-maps:18.2.0")
 
     //Retrofit
@@ -77,9 +79,6 @@ dependencies {
     implementation("androidx.room:room-runtime:2.7.1")
     implementation("androidx.room:room-ktx:2.7.1")
     ksp("androidx.room:room-compiler:2.7.1")
-
-    //Maps
-    implementation("com.google.android.gms:play-services-maps:18.2.0")
 
     //Dependencia de localizacion
     implementation("com.google.android.gms:play-services-location:21.0.1")

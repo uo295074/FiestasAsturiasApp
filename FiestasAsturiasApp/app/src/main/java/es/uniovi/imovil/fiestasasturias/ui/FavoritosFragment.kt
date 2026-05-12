@@ -34,6 +34,7 @@ class FavoritosFragment : Fragment() {
 
         // 🔥 ocultar filtros
         binding.searchLayout.visibility = View.GONE
+        binding.btnOpenFilters.visibility = View.GONE
         binding.filterLayout.visibility = View.GONE
         binding.cardKm.visibility = View.GONE
 
@@ -47,7 +48,9 @@ class FavoritosFragment : Fragment() {
                     putString("nombre", fiesta.nombre)
                     putString("descripcion", fiesta.descripcion)
                     putString("localidad", fiesta.localidad)
+                    putString("zona", fiesta.zona)
                     putString("imagen", fiesta.imagen)
+                    putStringArrayList("imagenes", ArrayList(fiesta.imagenes))
                     putString("email", fiesta.email)
                     putString("web", fiesta.web)
                     putString("dias", fiesta.dias)

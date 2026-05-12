@@ -4,6 +4,7 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.*
 import es.uniovi.imovil.fiestasasturias.data.FavoritesRepository
+import es.uniovi.imovil.fiestasasturias.data.HistoryRepository
 import es.uniovi.imovil.fiestasasturias.data.FiestaRepository
 import es.uniovi.imovil.fiestasasturias.data.local.AppDatabase
 import es.uniovi.imovil.fiestasasturias.model.Fiesta
@@ -16,15 +17,24 @@ class FiestaViewModel(application: Application) : AndroidViewModel(application) 
     private val favoritesRepository = FavoritesRepository(
         AppDatabase.getInstance(application).favoriteDao()
     )
+    private val historyRepository = HistoryRepository(
+        AppDatabase.getInstance(application).historialDao()
+    )
 
     private val _fiestas = MutableLiveData<List<Fiesta>>()
     val fiestas: LiveData<List<Fiesta>> = _fiestas
+
+    private val _fiestasFiltradas = MutableLiveData<List<Fiesta>>()
+    val fiestasFiltradas: LiveData<List<Fiesta>> = _fiestasFiltradas
 
     private val _favoritos = MutableLiveData<List<Fiesta>>()
     val favoritos: LiveData<List<Fiesta>> = _favoritos
 
     private val _localidades = MutableLiveData<List<String>>()
     val localidades: LiveData<List<String>> = _localidades
+
+    private val _zonas = MutableLiveData<List<String>>()
+    val zonas: LiveData<List<String>> = _zonas
 
     private val _historial = MutableLiveData<List<Fiesta>>()
     val historial: LiveData<List<Fiesta>> = _historial
@@ -38,6 +48,7 @@ class FiestaViewModel(application: Application) : AndroidViewModel(application) 
     // 🎛 estado global filtros (CLAVE 🔥)
     private var currentBusqueda: String = ""
     private var currentLocalidad: String = ""
+    private var currentZona: String = ""
     private var currentKm: Double? = null
 
     fun setUserLocation(lat: Double, lng: Double) {
@@ -45,7 +56,7 @@ class FiestaViewModel(application: Application) : AndroidViewModel(application) 
         userLng = lng
 
         // 🔥 re-aplicar filtros al cambiar ubicación
-        aplicarFiltrosGlobales()
+        aplicarFiltrosLista()
     }
 
     fun cargarFiestas() {
@@ -61,9 +72,17 @@ class FiestaViewModel(application: Application) : AndroidViewModel(application) 
                 }
 
                 listaOriginal = listaConFavoritos
+                _fiestas.value = listaConFavoritos
                 _localidades.value = listaConFavoritos.map { it.localidad }.distinct().sorted()
+                _zonas.value = listaConFavoritos.mapNotNull { it.zona }.distinct().sorted()
 
-                aplicarFiltrosGlobales()
+                val historyNames = historyRepository.getHistoryNames()
+                _historial.value = historyNames.mapNotNull { name ->
+                    listaConFavoritos.firstOrNull { it.nombre == name }
+                }
+
+                actualizarFavoritosYHistorial()
+                aplicarFiltrosLista()
 
             } catch (e: Exception) {
                 Log.e("DEBUG_API", "ERROR: ${e.message}")
@@ -89,7 +108,9 @@ class FiestaViewModel(application: Application) : AndroidViewModel(application) 
             }
         }
 
-        aplicarFiltrosGlobales()
+        _fiestas.value = listaOriginal
+        actualizarFavoritosYHistorial()
+        aplicarFiltrosLista()
     }
 
     // 🕓 HISTORIAL
@@ -102,39 +123,41 @@ class FiestaViewModel(application: Application) : AndroidViewModel(application) 
 
         _historial.value = actuales.take(20)
 
-        aplicarFiltrosGlobales()
+        viewModelScope.launch {
+            historyRepository.addToHistory(fiesta.nombre)
+        }
+
+        actualizarFavoritosYHistorial()
     }
 
     // 🔍 FUNCIÓN GLOBAL (TODO PASA POR AQUÍ 🔥)
-    fun buscarFiltrarYDistancia(texto: String, localidad: String, km: Double?) {
+    fun buscarFiltrarYDistancia(texto: String, localidad: String, zona: String, km: Double?) {
 
         currentBusqueda = texto
         currentLocalidad = localidad
+        currentZona = zona
         currentKm = km
 
-        aplicarFiltrosGlobales()
+        aplicarFiltrosLista()
     }
 
-    private fun aplicarFiltrosGlobales() {
+    private fun aplicarFiltrosLista() {
 
         val filtrada = listaOriginal.filter {
 
             val coincideBusqueda = it.nombre.contains(currentBusqueda, true)
             val coincideLocalidad = it.localidad.contains(currentLocalidad, true)
+            val coincideZona = (it.zona ?: "").contains(currentZona, true)
             val coincideDistancia = cumpleDistancia(it, currentKm)
 
-            coincideBusqueda && coincideLocalidad && coincideDistancia
+            coincideBusqueda && coincideLocalidad && coincideZona && coincideDistancia
         }
 
-        _fiestas.value = filtrada
+        _fiestasFiltradas.value = filtrada
+    }
 
-        // 🔥 favoritos filtrados
-        _favoritos.value = filtrada.filter { it.esFavorito }
-
-        // 🔥 historial filtrado
-        _historial.value = (_historial.value ?: emptyList()).filter {
-            cumpleDistancia(it, currentKm)
-        }
+    private fun actualizarFavoritosYHistorial() {
+        _favoritos.value = listaOriginal.filter { it.esFavorito }
     }
 
     // 📏 DISTANCIA

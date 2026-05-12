@@ -22,31 +22,8 @@ class FiestaRepository {
                 lat = 0.0
                 lng = 0.0
             }
-            val imagen = try {
-                val slide = dto.Visualizador?.Slide
-                val raw = when (slide){
-                    is Map<*,*> -> slide["value"] as? String
-                    is List<*> -> (slide.firstOrNull() as? Map<*,*>)?.get("value") as? String
-                    else -> null
-                }
-
-                if (raw != null){
-                    val json = org.json.JSONObject(raw)
-                    val uuid = json.takeIf { it.has("uuid") }?.optString("uuid")
-                    val groupId = json.takeIf { it.has("groupId") }?.optString("groupId")
-
-                    if (uuid != null && groupId != null){
-                        "https://www.turismoasturias.es/c/document_library/get_file?uuid=$uuid&groupId=$groupId"
-                    }else{
-                        null
-                    }
-                }else{
-                    null
-                }
-
-            } catch (e: Exception) {
-                null
-            }
+            val imagenes = extractImageUrls(dto.Visualizador?.Slide)
+            val imagen = imagenes.firstOrNull()
             Log.d("IMG_DEBUG", "Imagen: $imagen")
 
             val redes = dto.RedesSociales
@@ -58,8 +35,14 @@ class FiestaRepository {
             Fiesta(
                 nombre = dto.Nombre.content,
                 localidad = dto.Contacto.Localidad.content,
-                descripcion = dto.Informacion.DescripcionCorta.content,
+                zona = normalizeZona(dto.Contacto.Zona?.content),
+                descripcion = dto.Informacion.Descripcion?.content
+                    ?.takeIf { it.isNotBlank() }
+                    ?: dto.Informacion.DescripcionCorta.content
+                        ?.takeIf { it.isNotBlank() }
+                    ?: "",
                 imagen = imagen,
+                imagenes = imagenes,
                 latitud = lat,
                 longitud = lng,
                 email = normalizeText(dto.Contacto.Email?.content),
@@ -90,6 +73,18 @@ class FiestaRepository {
         }
     }
 
+    private fun normalizeZona(value: String?): String? {
+        val clean = normalizeText(value) ?: return null
+        val key = clean.lowercase()
+        return when {
+            key == "asturias" -> null
+            key.contains("centro") -> "Centro de Asturias"
+            key.contains("oriente") -> "Oriente de Asturias"
+            key.contains("occidente") -> "Occidente de Asturias"
+            else -> clean
+        }
+    }
+
     private fun buildOtrosCanales(
         nombres: Any?,
         urls: Any?
@@ -117,6 +112,35 @@ class FiestaRepository {
                 else -> null
             }
             normalizeText(value)
+        }
+    }
+
+    private fun extractImageUrls(rawSlide: Any?): List<String> {
+        val slideItems = when (rawSlide) {
+            null -> emptyList()
+            is List<*> -> rawSlide
+            else -> listOf(rawSlide)
+        }
+
+        return slideItems.mapNotNull { item ->
+            val value = (item as? Map<*, *>)?.get("value") as? String
+            buildImageUrlFromValue(value)
+        }.distinct()
+    }
+
+    private fun buildImageUrlFromValue(rawValue: String?): String? {
+        val clean = normalizeText(rawValue) ?: return null
+        return try {
+            val json = org.json.JSONObject(clean)
+            val uuid = json.takeIf { it.has("uuid") }?.optString("uuid")
+            val groupId = json.takeIf { it.has("groupId") }?.optString("groupId")
+            if (uuid.isNullOrBlank() || groupId.isNullOrBlank()) {
+                null
+            } else {
+                "https://www.turismoasturias.es/c/document_library/get_file?uuid=$uuid&groupId=$groupId"
+            }
+        } catch (_: Exception) {
+            null
         }
     }
 }

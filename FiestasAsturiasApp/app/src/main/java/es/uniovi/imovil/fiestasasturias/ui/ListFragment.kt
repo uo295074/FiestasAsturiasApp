@@ -16,6 +16,9 @@ import androidx.core.widget.addTextChangedListener
 import android.widget.ArrayAdapter
 import androidx.fragment.app.activityViewModels
 import android.content.Context
+import android.content.res.ColorStateList
+import androidx.core.content.ContextCompat
+import androidx.core.view.GravityCompat
 
 class ListFragment : Fragment() {
 
@@ -26,9 +29,12 @@ class ListFragment : Fragment() {
     private val PREFS_NAME = "filtros_prefs"
     private val KEY_BUSQUEDA = "busqueda"
     private val KEY_LOCALIDAD = "localidad"
+    private val KEY_ZONA = "zona"
     private val KEY_KM = "km"
+    private val KEY_KM_ACTIVE = "km_active"
 
     private var kmActual: Double = 50.0
+    private var kmFiltroActivo: Boolean = false
 
     // 🔥 detectar tablet UNA VEZ
     private var isTablet = false
@@ -57,7 +63,9 @@ class ListFragment : Fragment() {
                     putString("nombre", fiesta.nombre)
                     putString("descripcion", fiesta.descripcion)
                     putString("localidad", fiesta.localidad)
+                    putString("zona", fiesta.zona)
                     putString("imagen", fiesta.imagen)
+                    putStringArrayList("imagenes", ArrayList(fiesta.imagenes))
                     putString("email", fiesta.email)
                     putString("web", fiesta.web)
                     putString("dias", fiesta.dias)
@@ -99,7 +107,7 @@ class ListFragment : Fragment() {
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.adapter = adapter
 
-        viewModel.fiestas.observe(viewLifecycleOwner) { fiestas ->
+        viewModel.fiestasFiltradas.observe(viewLifecycleOwner) { fiestas ->
 
             adapter.setData(fiestas)
         }
@@ -116,19 +124,41 @@ class ListFragment : Fragment() {
             binding.spinnerLocalidad.setAdapter(adapterLocalidades)
         }
 
+        viewModel.zonas.observe(viewLifecycleOwner) { zonasBase ->
+            val zonas = listOf(getString(R.string.all_zones)) + zonasBase
+
+            val adapterZonas = ArrayAdapter(
+                requireContext(),
+                android.R.layout.simple_dropdown_item_1line,
+                zonas
+            )
+            binding.spinnerZona.setAdapter(adapterZonas)
+        }
+
+        binding.btnOpenFilters.setOnClickListener {
+            ocultarTeclado()
+            binding.filtersDrawer.openDrawer(GravityCompat.END)
+        }
+
         // 📏 SLIDER KM
         binding.sliderKm.addOnChangeListener { _, value, _ ->
 
             kmActual = value.toDouble()
-            binding.textKm.text = "${kmActual.toInt()} km"
+            kmFiltroActivo = true
+            updateDistanceVisualState()
             guardarKm(kmActual)
+            guardarKmActivo(kmFiltroActivo)
 
             aplicarFiltros()
         }
 
         // 🔍 BUSCADOR
         binding.searchInput.addTextChangedListener {
-            guardarFiltros(it.toString(), binding.spinnerLocalidad.text.toString())
+            guardarFiltros(
+                it.toString(),
+                binding.spinnerLocalidad.text.toString(),
+                binding.spinnerZona.text.toString()
+            )
             aplicarFiltros()
         }
 
@@ -143,9 +173,25 @@ class ListFragment : Fragment() {
 
         // 🎛 FILTRO
         binding.spinnerLocalidad.addTextChangedListener {
-            guardarFiltros(binding.searchInput.text.toString(), it.toString())
+            guardarFiltros(
+                binding.searchInput.text.toString(),
+                it.toString(),
+                binding.spinnerZona.text.toString()
+            )
             aplicarFiltros()
             ocultarTeclado()
+            binding.filtersDrawer.closeDrawer(GravityCompat.END)
+        }
+
+        binding.spinnerZona.addTextChangedListener {
+            guardarFiltros(
+                binding.searchInput.text.toString(),
+                binding.spinnerLocalidad.text.toString(),
+                it.toString()
+            )
+            aplicarFiltros()
+            ocultarTeclado()
+            binding.filtersDrawer.closeDrawer(GravityCompat.END)
         }
 
         binding.recyclerView.setOnTouchListener { v, _ ->
@@ -167,21 +213,26 @@ class ListFragment : Fragment() {
 
         val texto = binding.searchInput.text.toString()
         val localidadSeleccionada = binding.spinnerLocalidad.text.toString()
+        val zonaSeleccionada = binding.spinnerZona.text.toString()
         val localidad = if (localidadSeleccionada == getString(R.string.all_locations)) "" else localidadSeleccionada
+        val zona = if (zonaSeleccionada == getString(R.string.all_zones)) "" else zonaSeleccionada
 
         viewModel.buscarFiltrarYDistancia(
             texto,
             localidad,
-            kmActual
+            zona,
+            if (kmFiltroActivo) kmActual else null
         )
     }
 
-    private fun guardarFiltros(busqueda: String, localidad: String) {
+    private fun guardarFiltros(busqueda: String, localidad: String, zona: String) {
         val localidadNormalizada = if (localidad == getString(R.string.all_locations)) "" else localidad
+        val zonaNormalizada = if (zona == getString(R.string.all_zones)) "" else zona
         val prefs = requireContext().getSharedPreferences(PREFS_NAME, 0)
         prefs.edit()
             .putString(KEY_BUSQUEDA, busqueda)
             .putString(KEY_LOCALIDAD, localidadNormalizada)
+            .putString(KEY_ZONA, zonaNormalizada)
             .apply()
     }
 
@@ -190,7 +241,9 @@ class ListFragment : Fragment() {
 
         val busqueda = prefs.getString(KEY_BUSQUEDA, "") ?: ""
         val localidad = prefs.getString(KEY_LOCALIDAD, "") ?: ""
+        val zona = prefs.getString(KEY_ZONA, "") ?: ""
         kmActual = prefs.getFloat(KEY_KM, 50f).toDouble()
+        kmFiltroActivo = prefs.getBoolean(KEY_KM_ACTIVE, false)
 
         binding.searchInput.setText(busqueda)
         if (localidad.isBlank()) {
@@ -198,13 +251,40 @@ class ListFragment : Fragment() {
         } else {
             binding.spinnerLocalidad.setText(localidad, false)
         }
+        if (zona.isBlank()) {
+            binding.spinnerZona.setText(getString(R.string.all_zones), false)
+        } else {
+            binding.spinnerZona.setText(zona, false)
+        }
         binding.sliderKm.value = kmActual.toFloat()
-        binding.textKm.text = "${kmActual.toInt()} km"
+        updateDistanceVisualState()
     }
 
     private fun guardarKm(km: Double) {
         val prefs = requireContext().getSharedPreferences(PREFS_NAME, 0)
         prefs.edit().putFloat(KEY_KM, km.toFloat()).apply()
+    }
+
+    private fun guardarKmActivo(activo: Boolean) {
+        val prefs = requireContext().getSharedPreferences(PREFS_NAME, 0)
+        prefs.edit().putBoolean(KEY_KM_ACTIVE, activo).apply()
+    }
+
+    private fun updateDistanceVisualState() {
+        val activeColor = ContextCompat.getColor(requireContext(), R.color.primary)
+        val mutedColor = ContextCompat.getColor(requireContext(), R.color.textSecondary)
+
+        if (kmFiltroActivo) {
+            binding.textKm.text = getString(R.string.distance_active_value, kmActual.toInt())
+            binding.textKm.setTextColor(activeColor)
+            binding.sliderKm.trackActiveTintList = ColorStateList.valueOf(activeColor)
+            binding.sliderKm.haloTintList = ColorStateList.valueOf(activeColor)
+        } else {
+            binding.textKm.text = getString(R.string.distance_inactive)
+            binding.textKm.setTextColor(mutedColor)
+            binding.sliderKm.trackActiveTintList = ColorStateList.valueOf(mutedColor)
+            binding.sliderKm.haloTintList = ColorStateList.valueOf(mutedColor)
+        }
     }
 
     private fun ocultarTeclado() {

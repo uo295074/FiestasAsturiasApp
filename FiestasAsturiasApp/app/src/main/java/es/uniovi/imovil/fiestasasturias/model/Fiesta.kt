@@ -3,8 +3,10 @@ package es.uniovi.imovil.fiestasasturias.model
 data class Fiesta(
     val nombre: String,
     val localidad: String,
+    val zona: String? = null,
     val descripcion: String,
     val imagen: String?,
+    val imagenes: List<String> = emptyList(),
     val latitud: Double,
     val longitud: Double,
     val email: String? = null,

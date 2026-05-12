@@ -6,16 +6,12 @@ import android.os.Bundle
 import androidx.core.app.ActivityCompat
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.drawerlayout.widget.DrawerLayout
-import androidx.core.view.GravityCompat
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.appbar.MaterialToolbar
-import com.google.android.material.navigation.NavigationView
 import es.uniovi.imovil.fiestasasturias.R
 import es.uniovi.imovil.fiestasasturias.domain.FiestaViewModel
 
@@ -23,7 +19,6 @@ class MainActivity : AppCompatActivity() {
 
     private val viewModel: FiestaViewModel by viewModels()
     private var selectedNavItemId: Int = R.id.nav_home
-    private lateinit var drawerLayout: DrawerLayout
     private lateinit var bottomNav: BottomNavigationView
 
     companion object {
@@ -50,27 +45,10 @@ class MainActivity : AppCompatActivity() {
 
         selectedNavItemId = savedInstanceState?.getInt(KEY_SELECTED_NAV, R.id.nav_home) ?: R.id.nav_home
 
-        drawerLayout = findViewById(R.id.drawerLayout)
         bottomNav = findViewById(R.id.bottomNav)
         val topBar = findViewById<MaterialToolbar>(R.id.topBar)
-        val navigationView = findViewById<NavigationView>(R.id.navigationView)
 
         setSupportActionBar(topBar)
-        val toggle = ActionBarDrawerToggle(
-            this,
-            drawerLayout,
-            topBar,
-            R.string.navigation_open,
-            R.string.navigation_close
-        )
-        drawerLayout.addDrawerListener(toggle)
-        toggle.syncState()
-
-        navigationView.setNavigationItemSelectedListener { item ->
-            val handled = navigateTo(item.itemId)
-            drawerLayout.closeDrawer(GravityCompat.START)
-            handled
-        }
 
         // 🔥 Fragment inicial
         if (savedInstanceState == null) {

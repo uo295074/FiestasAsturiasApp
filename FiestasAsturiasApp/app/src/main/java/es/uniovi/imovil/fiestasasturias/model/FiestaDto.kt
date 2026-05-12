@@ -15,15 +15,17 @@ data class Nombre(
 )
 
 data class Informacion(
-    val DescripcionCorta: Descripcion
+    val DescripcionCorta: Descripcion,
+    val Descripcion: Descripcion?
 )
 
 data class Descripcion(
-    val content: String
+    val content: String?
 )
 
 data class Contacto(
     val Localidad: Localidad,
+    val Zona: Zona?,
     val Email: Email?,
     val Web: Web?,
     val Dias: Dias?
@@ -31,6 +33,10 @@ data class Contacto(
 
 data class Localidad(
     val content: String
+)
+
+data class Zona(
+    val content: String?
 )
 
 data class Email(

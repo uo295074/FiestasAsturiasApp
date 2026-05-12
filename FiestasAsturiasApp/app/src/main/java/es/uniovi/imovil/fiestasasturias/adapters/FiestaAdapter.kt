@@ -27,7 +27,6 @@ class FiestaAdapter(
         val image: ImageView = view.findViewById(R.id.image)
         val title: TextView = view.findViewById(R.id.title)
         val location: TextView = view.findViewById(R.id.location)
-        val description: TextView = view.findViewById(R.id.description)
         val fav: ImageView = view.findViewById(R.id.favIcon) // ⭐ nuevo
     }
 
@@ -44,7 +43,6 @@ class FiestaAdapter(
 
         holder.title.text = fiesta.nombre
         holder.location.text = fiesta.localidad
-        holder.description.text = fiesta.descripcion
 
         Glide.with(holder.itemView.context)
             .load(fiesta.imagen)

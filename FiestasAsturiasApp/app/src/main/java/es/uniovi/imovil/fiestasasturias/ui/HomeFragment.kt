@@ -8,7 +8,24 @@ import es.uniovi.imovil.fiestasasturias.R
 class HomeFragment : Fragment(R.layout.fragment_home) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        val animatedViews = listOf(
+            view.findViewById<View>(R.id.homeBadge),
+            view.findViewById(R.id.homeTitle),
+            view.findViewById(R.id.homeSubtitle),
+            view.findViewById(R.id.homeFeaturedCard),
+            view.findViewById(R.id.homeBlockOneCard),
+            view.findViewById(R.id.homeBlockTwoCard)
+        )
 
-
+        animatedViews.forEachIndexed { index, item ->
+            item.alpha = 0f
+            item.translationY = 32f
+            item.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setStartDelay(index * 70L)
+                .setDuration(320L)
+                .start()
+        }
     }
 }
