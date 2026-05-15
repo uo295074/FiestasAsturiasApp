@@ -5,6 +5,8 @@ import es.uniovi.imovil.fiestasasturias.model.Fiesta
 
 class FiestaRepository {
 
+    // este repositorio hace de puente entre el json remoto y el modelo de dominio Fiesta.
+    // aquí concentramos parseo  normalización para que el viewmodel reciba datos limpios.
     suspend fun getFiestas(): List<Fiesta> {
 
         val response = RetrofitClient.api.getFiestas()
@@ -22,6 +24,8 @@ class FiestaRepository {
                 lat = 0.0
                 lng = 0.0
             }
+            // algunas fiestas traen una sola slide y otras una lista completa.
+            // por eso extraemos siempre una colección de imágenes.
             val imagenes = extractImageUrls(dto.Visualizador?.Slide)
             val imagen = imagenes.firstOrNull()
             Log.d("IMG_DEBUG", "Imagen: $imagen")
@@ -36,6 +40,7 @@ class FiestaRepository {
                 nombre = dto.Nombre.content,
                 localidad = dto.Contacto.Localidad.content,
                 zona = normalizeZona(dto.Contacto.Zona?.content),
+                // priorizamos descripción larga y, si no viene, usamos la corta.
                 descripcion = dto.Informacion.Descripcion?.content
                     ?.takeIf { it.isNotBlank() }
                     ?: dto.Informacion.DescripcionCorta.content
@@ -66,6 +71,8 @@ class FiestaRepository {
 
     private fun normalizeUrl(value: String?): String? {
         val clean = normalizeText(value) ?: return null
+        // muchos enlaces en el json llegan sin protocolo.
+        // aquí forzamos un formato de url válido para abrirlos desde la app.
         return if (clean.startsWith("http://") || clean.startsWith("https://")) {
             clean
         } else {
@@ -76,6 +83,7 @@ class FiestaRepository {
     private fun normalizeZona(value: String?): String? {
         val clean = normalizeText(value) ?: return null
         val key = clean.lowercase()
+        // unificamos variantes para que el filtro por zona no tenga duplicados raros.
         return when {
             key == "asturias" -> null
             key.contains("centro") -> "Centro de Asturias"
@@ -89,6 +97,8 @@ class FiestaRepository {
         nombres: Any?,
         urls: Any?
     ): List<Pair<String, String>> {
+        // en este campo el json es muy irregular y puede venir como objeto o lista.
+        // se emparejan nombre-url por posición para poder pintarlos como botones en detalle.
         val names = extractValues(nombres, "value")
         val links = extractValues(urls, "content").mapNotNull { normalizeUrl(it) }
         if (names.isEmpty() || links.isEmpty()) return emptyList()
@@ -116,6 +126,7 @@ class FiestaRepository {
     }
 
     private fun extractImageUrls(rawSlide: Any?): List<String> {
+        // slide puede ser null, objeto o lista. lo normalizamos siempre a lista.
         val slideItems = when (rawSlide) {
             null -> emptyList()
             is List<*> -> rawSlide
@@ -131,6 +142,8 @@ class FiestaRepository {
     private fun buildImageUrlFromValue(rawValue: String?): String? {
         val clean = normalizeText(rawValue) ?: return null
         return try {
+            // el campo value trae un json serializado con uuid y groupId.
+            // con esos dos datos reconstruimos la url final de la imagen.
             val json = org.json.JSONObject(clean)
             val uuid = json.takeIf { it.has("uuid") }?.optString("uuid")
             val groupId = json.takeIf { it.has("groupId") }?.optString("groupId")

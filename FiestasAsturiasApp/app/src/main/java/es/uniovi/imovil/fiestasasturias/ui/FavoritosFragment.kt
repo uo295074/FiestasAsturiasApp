@@ -32,7 +32,7 @@ class FavoritosFragment : Fragment() {
 
         isTablet = requireActivity().findViewById<View?>(R.id.detailContainer) != null
 
-        // 🔥 ocultar filtros
+        // favoritos reutiliza el layout de lista, pero aquí no aplican filtros de búsqueda/km.
         binding.searchLayout.visibility = View.GONE
         binding.btnOpenFilters.visibility = View.GONE
         binding.filterLayout.visibility = View.GONE
@@ -71,12 +71,12 @@ class FavoritosFragment : Fragment() {
                 }
 
                 if (isTablet) {
-                    // 👉 tablet: cargar en panel derecho
+                    // en tablet abrimos el detalle en el panel lateral.
                     parentFragmentManager.beginTransaction()
                         .replace(R.id.detailContainer, detailFragment)
                         .commit()
                 } else {
-                    // 👉 móvil: navegación normal
+                    // en móvil navegamos al contenedor principal.
                     parentFragmentManager.beginTransaction()
                         .replace(R.id.fragmentContainerView, detailFragment)
                         .addToBackStack(null)

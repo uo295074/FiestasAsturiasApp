@@ -31,7 +31,7 @@ class DetailFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-        // 🔙 BOTÓN VOLVER
+        // este detalle se abre desde varios fragments y volvemos usando el backstack.
         binding.btnBack.setOnClickListener {
             parentFragmentManager.popBackStack()
         }
@@ -87,10 +87,11 @@ class DetailFragment : Fragment() {
         renderSocialButtons(socialButtons)
         binding.cardSocial.visibility = if (socialButtons.isEmpty()) View.GONE else View.VISIBLE
 
+        // si no hay galería usamos la imagen principal para no dejar el bloque vacío.
         val galleryImages = imagenes.ifEmpty { listOfNotNull(imagen) }
         setupImageGallery(galleryImages)
 
-        // ✨ ANIMACIÓN DE ENTRADA (PRO)
+        // animación de entrada simple para suavizar transición desde la lista.
         binding.root.apply {
             alpha = 0f
             scaleX = 0.95f
@@ -140,6 +141,7 @@ class DetailFragment : Fragment() {
     }
 
     private fun parseOtherChannels(rawChannels: List<String>): List<Pair<String, String>> {
+        // desde el bundle llega como "nombre: url" y aquí lo volvemos a separar.
         return rawChannels.mapNotNull { item ->
             val parts = item.split(": ", limit = 2)
             val label = parts.getOrNull(0)?.trim().orEmpty()
@@ -174,6 +176,7 @@ class DetailFragment : Fragment() {
     }
 
     private fun setupImageGallery(images: List<String>) {
+        // sin imágenes ocultamos controles para mantener limpio el layout.
         if (images.isEmpty()) {
             binding.imageCounter.visibility = View.GONE
             binding.btnPrevImage.visibility = View.GONE
@@ -184,6 +187,7 @@ class DetailFragment : Fragment() {
         binding.imagePager.adapter = DetailImagePagerAdapter(images)
 
         if (images.size == 1) {
+            // con una sola imagen no tiene sentido mostrar navegación.
             binding.imageCounter.visibility = View.GONE
             binding.btnPrevImage.visibility = View.GONE
             binding.btnNextImage.visibility = View.GONE
@@ -210,6 +214,7 @@ class DetailFragment : Fragment() {
         }
 
         fun updateArrowState(position: Int) {
+            // desactivamos flechas en extremos para evitar clicks sin efecto.
             binding.btnPrevImage.alpha = if (position == 0) 0.35f else 1f
             binding.btnNextImage.alpha = if (position == images.lastIndex) 0.35f else 1f
             binding.btnPrevImage.isEnabled = position != 0

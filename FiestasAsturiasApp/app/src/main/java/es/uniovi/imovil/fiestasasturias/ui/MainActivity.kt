@@ -25,7 +25,7 @@ class MainActivity : AppCompatActivity() {
         private const val KEY_SELECTED_NAV = "selected_nav"
     }
 
-    //  API MODERNA DE PERMISOS
+    // gestionamos permiso de ubicación con el launcher moderno para evitar onActivityResult legado.
     private val locationPermissionLauncher =
         registerForActivityResult(
             ActivityResultContracts.RequestPermission()
@@ -34,11 +34,12 @@ class MainActivity : AppCompatActivity() {
             if (isGranted) {
                 fetchUserLocation()
             } else {
-                //  permiso denegado (puedes mostrar mensaje si quieres)
+                // si no hay permiso, la app sigue funcionando sin filtro por distancia.
             }
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // aplicamos tema e idioma antes de inflar vistas para que el arranque sea consistente.
         AppPreferences.apply(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -50,7 +51,7 @@ class MainActivity : AppCompatActivity() {
 
         setSupportActionBar(topBar)
 
-        // 🔥 Fragment inicial
+        // cargamos home solo en primer arranque; en recreaciones respetamos el fragment actual.
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
                 .replace(R.id.fragmentContainerView, HomeFragment())
@@ -66,10 +67,10 @@ class MainActivity : AppCompatActivity() {
             bottomNav.selectedItemId = selectedNavItemId
         }
 
-        // 📍 PEDIR PERMISO (API NUEVA)
+        // pedimos permiso de ubicación para habilitar el filtro por km y la posición en mapa.
         checkLocationPermission()
 
-        // 🔥 cargar datos
+        // evitamos recargar si el viewmodel ya conserva datos de una instancia previa.
         if (viewModel.fiestas.value == null) {
             viewModel.cargarFiestas()
         }
@@ -86,6 +87,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun openHistoryFromSettings() {
+        // historial cuelga de ajustes, por eso se abre como navegación secundaria con backstack.
         selectedNavItemId = R.id.nav_settings
         supportFragmentManager.beginTransaction()
             .setCustomAnimations(
@@ -152,12 +154,14 @@ class MainActivity : AppCompatActivity() {
 
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
+        // primero intentamos última ubicación conocida por rapidez.
         fusedLocationClient.lastLocation.addOnSuccessListener { location ->
             if (location != null) {
                 viewModel.setUserLocation(location.latitude, location.longitude)
             }
         }
 
+        // luego pedimos una ubicación fresca para mejorar precisión.
         fusedLocationClient.getCurrentLocation(
             Priority.PRIORITY_HIGH_ACCURACY,
             null

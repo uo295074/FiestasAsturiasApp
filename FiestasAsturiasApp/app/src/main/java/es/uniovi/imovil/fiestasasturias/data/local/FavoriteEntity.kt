@@ -5,5 +5,6 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "favorites")
 data class FavoriteEntity(
+    // usamos nombre como clave porque en el dataset actual identifica la fiesta.
     @PrimaryKey val nombre: String
 )

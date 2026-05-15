@@ -8,6 +8,7 @@ import es.uniovi.imovil.fiestasasturias.R
 class HomeFragment : Fragment(R.layout.fragment_home) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        // animamos solo bloques clave para dar sensación de entrada sin recargar la vista.
         val animatedViews = listOf(
             view.findViewById<View>(R.id.homeBadge),
             view.findViewById(R.id.homeTitle),

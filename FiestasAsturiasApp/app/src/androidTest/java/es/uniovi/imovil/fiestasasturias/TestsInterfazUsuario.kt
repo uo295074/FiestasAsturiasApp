@@ -32,7 +32,7 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 @LargeTest
-class UiFlowsEspressoBaristaTest {
+class TestsInterfazUsuario {
 
     @get:Rule
     val permissionRule: GrantPermissionRule = GrantPermissionRule.grant(

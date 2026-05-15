@@ -4,6 +4,10 @@
     <string name="search_hint">Buscar fiesta...</string>
     <string name="filter_hint">Filtrar por localidad</string>
     <string name="zone_filter_hint">Filtrar por zona</string>
+    <string name="order_hint">Ordenar por</string>
+    <string name="order_name">Nombre</string>
+    <string name="order_distance">Cercania</string>
+    <string name="order_distance_no_location">No hay ubicacion disponible, se ordena por nombre</string>
     <string name="distance_filter">Filtrar por distancia (km)</string>
     <string name="filters">Filtros</string>
     <string name="filters_indication">Busca por localidad, zona y cercania</string>
@@ -15,12 +19,18 @@
     <string name="dark_mode">Modo oscuro</string>
     <string name="language">Idioma</string>
     <string name="language_indication">Selecciona el idioma de la app</string>
+    <string name="map_type">Tipo de mapa</string>
+    <string name="map_type_indication">Elige como quieres ver el mapa</string>
+    <string name="map_type_normal">Normal</string>
+    <string name="map_type_satellite">Satelite</string>
     <string name="language_spanish">Espanol</string>
     <string name="language_english">Ingles</string>
     <string name="settings">Configuración</string>
     <string name="dark_mode_indication">Activa el tema oscuro de la app</string>
     <string name="history_indication">Consulta las ultimas fiestas visitadas</string>
     <string name="open_history">Abrir historial</string>
+    <string name="clear_history">Borrar historial</string>
+    <string name="clear_favorites">Borrar favoritos</string>
 
     <string name="favorites">Favoritos</string>
     <string name="history">Historial</string>

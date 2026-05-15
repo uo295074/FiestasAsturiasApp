@@ -8,6 +8,7 @@ import androidx.room.Query
 @Dao
 interface FavoriteDao {
 
+    // con esta consulta ligera solo movemos nombres, no objetos completos.
     @Query("SELECT nombre FROM favorites")
     suspend fun getFavoriteNames(): List<String>
 
@@ -16,4 +17,7 @@ interface FavoriteDao {
 
     @Query("DELETE FROM favorites WHERE nombre = :nombre")
     suspend fun deleteFavoriteByName(nombre: String)
+
+    @Query("DELETE FROM favorites")
+    suspend fun clearFavorites()
 }

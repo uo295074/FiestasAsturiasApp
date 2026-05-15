@@ -20,6 +20,8 @@ class DetailImagePagerAdapter(
     }
 
     override fun onBindViewHolder(holder: ImageViewHolder, position: Int) {
+        // cada página del carrusel carga su imagen por url.
+        // si tarda en cargar, mostramos placeholder para no dejar hueco vacío.
         Glide.with(holder.itemView.context)
             .load(images[position])
             .placeholder(R.drawable.ic_launcher_background)

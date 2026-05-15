@@ -8,6 +8,7 @@ import androidx.room.Query
 @Dao
 interface HistorialDao {
 
+    // devolvemos ya ordenado para que la ui muestre primero lo último visitado.
     @Query("SELECT nombre FROM history ORDER BY updatedAt DESC LIMIT 20")
     suspend fun getHistoryNames(): List<String>
 
@@ -16,4 +17,7 @@ interface HistorialDao {
 
     @Query("DELETE FROM history WHERE nombre NOT IN (SELECT nombre FROM history ORDER BY updatedAt DESC LIMIT 20)")
     suspend fun trimToLast20()
+
+    @Query("DELETE FROM history")
+    suspend fun clearHistory()
 }

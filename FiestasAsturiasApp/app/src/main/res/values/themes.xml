@@ -13,6 +13,7 @@
 
         <!-- BACKGROUND -->
         <item name="android:colorBackground">@color/background</item>
+        <item name="android:windowBackground">@color/background</item>
 
         <!-- SURFACE -->
         <item name="colorSurface">@color/surface</item>

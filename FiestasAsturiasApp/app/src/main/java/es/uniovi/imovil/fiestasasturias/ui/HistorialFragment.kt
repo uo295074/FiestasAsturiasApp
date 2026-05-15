@@ -32,7 +32,7 @@ class HistorialFragment : Fragment() {
 
         isTablet = requireActivity().findViewById<View?>(R.id.detailContainer) != null
 
-        // 🔥 ocultar filtros
+        // historial también reutiliza el layout de lista, pero sin filtros de lista.
         binding.searchLayout.visibility = View.GONE
         binding.btnOpenFilters.visibility = View.GONE
         binding.filterLayout.visibility = View.GONE
@@ -69,12 +69,12 @@ class HistorialFragment : Fragment() {
                 }
 
                 if (isTablet) {
-                    // 👉 tablet: panel derecho
+                    // en tablet abrimos el detalle en el panel lateral.
                     parentFragmentManager.beginTransaction()
                         .replace(R.id.detailContainer, detailFragment)
                         .commit()
                 } else {
-                    // 👉 móvil: navegación normal
+                    // en móvil navegamos al contenedor principal.
                     parentFragmentManager.beginTransaction()
                         .replace(R.id.fragmentContainerView, detailFragment)
                         .addToBackStack(null)

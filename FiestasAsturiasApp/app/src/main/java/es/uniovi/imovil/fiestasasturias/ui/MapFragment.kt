@@ -48,7 +48,7 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
         binding = FragmentMapBinding.bind(view)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
 
-        // ✨ Animación
+        // animación ligera para que el mapa no aparezca de golpe.
         binding.root.alpha = 0f
         binding.root.animate()
             .alpha(1f)
@@ -65,9 +65,11 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
 
+        // aplicamos el tipo elegido en ajustes antes de pintar marcadores.
+        applyConfiguredMapType()
         map.uiSettings.isZoomControlsEnabled = true
 
-        // 📍 fallback SIEMPRE → Asturias
+        // punto de partida estable por si todavía no hay ubicación del usuario.
         val asturias = LatLng(43.3619, -5.8494)
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(asturias, 7f))
 
@@ -127,7 +129,7 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
                 )
             }
 
-            // VOLVER A PINTAR USUARIO
+            // al limpiar y repintar marcadores de fiestas, reponemos también el del usuario.
             viewModel.userLat?.let { lat ->
                 viewModel.userLng?.let { lng ->
 
@@ -143,6 +145,19 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
         }
 
         viewModel.cargarFiestas()
+    }
+
+    //funcion para cambiar el tipo de mapa segun lo que haya seleccionado el usuario en la configuracion
+    private fun applyConfiguredMapType() {
+        val prefs = requireContext().getSharedPreferences(AppPreferences.PREFS, Context.MODE_PRIVATE)
+        val type = prefs.getString(AppPreferences.KEY_MAP_TYPE, AppPreferences.DEFAULT_MAP_TYPE)
+            ?: AppPreferences.DEFAULT_MAP_TYPE
+
+        map.mapType = if (type == AppPreferences.MAP_TYPE_SATELLITE) {
+            GoogleMap.MAP_TYPE_SATELLITE
+        } else {
+            GoogleMap.MAP_TYPE_NORMAL
+        }
     }
 
     override fun onResume() {
@@ -163,6 +178,7 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
         }
 
         if (!isLocationEnabled()) {
+            // si el gps está apagado, llevamos al usuario a ajustes de ubicación.
             startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
             return
         }
@@ -181,6 +197,7 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
     private fun requestSingleFreshLocation() {
         if (requestingLocationUpdates || !hasLocationPermission()) return
 
+        // pedimos una actualización puntual y la cortamos al primer resultado válido.
         val locationRequest =
             LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 10_000L)
                 .setMinUpdateDistanceMeters(10f)
@@ -215,6 +232,7 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
     private fun updateUserLocation(location: Location, moveCamera: Boolean) {
         val userLatLng = LatLng(location.latitude, location.longitude)
 
+        // compartimos ubicación con el viewmodel para filtro por distancia.
         viewModel.setUserLocation(location.latitude, location.longitude)
 
         userMarker?.remove()

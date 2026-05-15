@@ -1,5 +1,7 @@
 package es.uniovi.imovil.fiestasasturias.model
 
+// estos dto reflejan el formato del json remoto tal cual viene.
+// luego FiestaRepository transforma esto al modelo de dominio Fiesta.
 
 data class FiestaDto(
     val Nombre: Nombre,
@@ -60,6 +62,8 @@ data class Coordenadas(
 )
 
 data class Visualizador(
+    // en el json real puede venir como objeto, lista o null.
+    // se deja Any? para parsearlo  en el repositorio.
     val Slide: Any?
 )
 
@@ -82,6 +86,7 @@ data class CanalSimple(
 )
 
 data class OtrosCanales(
+    // también llega con estructura variable, por eso usamos Any?.
     val NombreCanal: Any?,
     val CanalUrl: Any?
 )

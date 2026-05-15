@@ -3,6 +3,7 @@ package es.uniovi.imovil.fiestasasturias.ui
 import android.os.Bundle
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -31,12 +32,14 @@ class ListFragment : Fragment() {
     private val KEY_LOCALIDAD = "localidad"
     private val KEY_ZONA = "zona"
     private val KEY_KM = "km"
-    private val KEY_KM_ACTIVE = "km_active"
+    private val KEY_ORDEN = "orden"
+    private val KM_MAX = 200.0
 
     private var kmActual: Double = 50.0
     private var kmFiltroActivo: Boolean = false
+    private var showedDistanceOrderToast: Boolean = false
 
-    // 🔥 detectar tablet UNA VEZ
+    // en tablet abrimos detalle en panel derecho; en móvil navegamos a pantalla completa.
     private var isTablet = false
 
     override fun onCreateView(
@@ -86,12 +89,12 @@ class ListFragment : Fragment() {
                 }
 
                 if (isTablet) {
-                    // 👉 tablet: cargar en panel derecho
+                    // en tablet se mantiene patrón master-detail en la misma pantalla.
                     parentFragmentManager.beginTransaction()
                         .replace(R.id.detailContainer, detailFragment)
                         .commit()
                 } else {
-                    // 👉 móvil: navegación normal
+                    // en móvil abrimos detalle en el contenedor principal y añadimos backstack.
                     parentFragmentManager.beginTransaction()
                         .replace(R.id.fragmentContainerView, detailFragment)
                         .addToBackStack(null)
@@ -140,19 +143,19 @@ class ListFragment : Fragment() {
             binding.filtersDrawer.openDrawer(GravityCompat.END)
         }
 
-        // 📏 SLIDER KM
+        // el filtro de distancia solo se considera activo cuando el usuario toca el slider.
         binding.sliderKm.addOnChangeListener { _, value, _ ->
 
             kmActual = value.toDouble()
-            kmFiltroActivo = true
+            // si está en el máximo, lo tratamos como "sin filtro de distancia".
+            kmFiltroActivo = kmActual < KM_MAX
             updateDistanceVisualState()
             guardarKm(kmActual)
-            guardarKmActivo(kmFiltroActivo)
 
             aplicarFiltros()
         }
 
-        // 🔍 BUSCADOR
+        // búsqueda en tiempo real por nombre.
         binding.searchInput.addTextChangedListener {
             guardarFiltros(
                 it.toString(),
@@ -171,7 +174,7 @@ class ListFragment : Fragment() {
             }
         }
 
-        // 🎛 FILTRO
+        // localidad y zona se aplican al instante y se guardan en preferencias.
         binding.spinnerLocalidad.addTextChangedListener {
             guardarFiltros(
                 binding.searchInput.text.toString(),
@@ -194,6 +197,26 @@ class ListFragment : Fragment() {
             binding.filtersDrawer.closeDrawer(GravityCompat.END)
         }
 
+        val opcionesOrden = listOf(
+            getString(R.string.order_name),
+            getString(R.string.order_distance)
+        )
+        val adapterOrden = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_dropdown_item_1line,
+            opcionesOrden
+        )
+        binding.spinnerOrden.setAdapter(adapterOrden)
+        binding.spinnerOrden.addTextChangedListener {
+            guardarOrden(it.toString())
+            if (it.toString() != getString(R.string.order_distance)) {
+                showedDistanceOrderToast = false
+            }
+            aplicarFiltros()
+            ocultarTeclado()
+            binding.filtersDrawer.closeDrawer(GravityCompat.END)
+        }
+
         binding.recyclerView.setOnTouchListener { v, _ ->
             v.performClick()
             binding.searchInput.clearFocus()
@@ -203,7 +226,7 @@ class ListFragment : Fragment() {
 
         cargarFiltros()
 
-        // evitar recargar innecesariamente
+        // evitamos recargar innecesariamente si ya hay datos en memoria.
         if (viewModel.fiestas.value == null) {
             viewModel.cargarFiestas()
         }
@@ -217,11 +240,22 @@ class ListFragment : Fragment() {
         val localidad = if (localidadSeleccionada == getString(R.string.all_locations)) "" else localidadSeleccionada
         val zona = if (zonaSeleccionada == getString(R.string.all_zones)) "" else zonaSeleccionada
 
+        // si piden ordenar por cercanía sin ubicación, avisamos una vez y usamos fallback por nombre.
+        if (getCurrentOrderCode() == FiestaViewModel.ORDER_DISTANCE &&
+            (viewModel.userLat == null || viewModel.userLng == null) &&
+            !showedDistanceOrderToast
+        ) {
+            Toast.makeText(requireContext(), getString(R.string.order_distance_no_location), Toast.LENGTH_SHORT).show()
+            showedDistanceOrderToast = true
+        }
+
+        // "todas" se traduce a cadena vacía para no condicionar el filtro.
         viewModel.buscarFiltrarYDistancia(
             texto,
             localidad,
             zona,
-            if (kmFiltroActivo) kmActual else null
+            if (kmFiltroActivo) kmActual else null,
+            getCurrentOrderCode()
         )
     }
 
@@ -242,9 +276,12 @@ class ListFragment : Fragment() {
         val busqueda = prefs.getString(KEY_BUSQUEDA, "") ?: ""
         val localidad = prefs.getString(KEY_LOCALIDAD, "") ?: ""
         val zona = prefs.getString(KEY_ZONA, "") ?: ""
-        kmActual = prefs.getFloat(KEY_KM, 50f).toDouble()
-        kmFiltroActivo = prefs.getBoolean(KEY_KM_ACTIVE, false)
+        val orden = prefs.getString(KEY_ORDEN, FiestaViewModel.ORDER_NAME) ?: FiestaViewModel.ORDER_NAME
+        kmActual = prefs.getFloat(KEY_KM, KM_MAX.toFloat()).toDouble().coerceIn(1.0, KM_MAX)
+        // al restaurar, máximo equivale a filtro desactivado.
+        kmFiltroActivo = kmActual < KM_MAX
 
+        // restauramos estado de ui para que los filtros persistan entre sesiones.
         binding.searchInput.setText(busqueda)
         if (localidad.isBlank()) {
             binding.spinnerLocalidad.setText(getString(R.string.all_locations), false)
@@ -256,6 +293,10 @@ class ListFragment : Fragment() {
         } else {
             binding.spinnerZona.setText(zona, false)
         }
+        binding.spinnerOrden.setText(
+            if (orden == FiestaViewModel.ORDER_DISTANCE) getString(R.string.order_distance) else getString(R.string.order_name),
+            false
+        )
         binding.sliderKm.value = kmActual.toFloat()
         updateDistanceVisualState()
     }
@@ -265,9 +306,22 @@ class ListFragment : Fragment() {
         prefs.edit().putFloat(KEY_KM, km.toFloat()).apply()
     }
 
-    private fun guardarKmActivo(activo: Boolean) {
+    private fun guardarOrden(label: String) {
+        val code = if (label == getString(R.string.order_distance)) {
+            FiestaViewModel.ORDER_DISTANCE
+        } else {
+            FiestaViewModel.ORDER_NAME
+        }
         val prefs = requireContext().getSharedPreferences(PREFS_NAME, 0)
-        prefs.edit().putBoolean(KEY_KM_ACTIVE, activo).apply()
+        prefs.edit().putString(KEY_ORDEN, code).apply()
+    }
+
+    private fun getCurrentOrderCode(): String {
+        return if (binding.spinnerOrden.text.toString() == getString(R.string.order_distance)) {
+            FiestaViewModel.ORDER_DISTANCE
+        } else {
+            FiestaViewModel.ORDER_NAME
+        }
     }
 
     private fun updateDistanceVisualState() {

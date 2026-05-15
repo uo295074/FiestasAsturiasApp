@@ -13,6 +13,13 @@ import kotlin.math.*
 
 class FiestaViewModel(application: Application) : AndroidViewModel(application) {
 
+    companion object {
+        const val ORDER_NAME = "name"
+        const val ORDER_DISTANCE = "distance"
+    }
+
+    // el viewmodel concentra el estado de la app y delega acceso a datos en repositorios.
+    // así evitamos que los fragments mezclen lógica de ui con lógica de datos.
     private val repository = FiestaRepository()
     private val favoritesRepository = FavoritesRepository(
         AppDatabase.getInstance(application).favoriteDao()
@@ -41,21 +48,23 @@ class FiestaViewModel(application: Application) : AndroidViewModel(application) 
 
     private var listaOriginal: List<Fiesta> = emptyList()
 
-    // 📍 ubicación usuario
+    // última ubicación conocida del usuario. se usa para filtro por distancia.
     var userLat: Double? = null
     var userLng: Double? = null
 
-    // 🎛 estado global filtros (CLAVE 🔥)
+    // estado actual de filtros en lista.
+    // lo guardamos aquí para poder re-aplicarlo cuando cambian datos o ubicación.
     private var currentBusqueda: String = ""
     private var currentLocalidad: String = ""
     private var currentZona: String = ""
     private var currentKm: Double? = null
+    private var currentOrder: String = ORDER_NAME
 
     fun setUserLocation(lat: Double, lng: Double) {
         userLat = lat
         userLng = lng
 
-        // 🔥 re-aplicar filtros al cambiar ubicación
+        // si cambia la ubicación, puede cambiar el resultado del filtro por km.
         aplicarFiltrosLista()
     }
 
@@ -63,8 +72,8 @@ class FiestaViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             try {
                 val data = repository.getFiestas()
-                Log.d("DEBUG_API", "📦 Fiestas recibidas: ${data.size}")
 
+                // al cargar desde red, sincronizamos estado de favoritos persistidos en room.
                 val favoritosGuardados = favoritesRepository.getFavoriteNames()
 
                 val listaConFavoritos = data.map {
@@ -90,7 +99,7 @@ class FiestaViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    // ⭐ FAVORITOS
+    // cambia favorito en memoria y lo persiste en segundo plano.
     fun toggleFavorito(fiesta: Fiesta) {
 
         val fiestaActualizada = listaOriginal.firstOrNull { it.nombre == fiesta.nombre }
@@ -113,7 +122,7 @@ class FiestaViewModel(application: Application) : AndroidViewModel(application) 
         aplicarFiltrosLista()
     }
 
-    // 🕓 HISTORIAL
+    // añade una fiesta al historial, evita duplicados y limita a los 20 ultimos elementos.
     fun addHistorial(fiesta: Fiesta) {
 
         val actuales = _historial.value?.toMutableList() ?: mutableListOf()
@@ -130,18 +139,43 @@ class FiestaViewModel(application: Application) : AndroidViewModel(application) 
         actualizarFavoritosYHistorial()
     }
 
-    // 🔍 FUNCIÓN GLOBAL (TODO PASA POR AQUÍ 🔥)
-    fun buscarFiltrarYDistancia(texto: String, localidad: String, zona: String, km: Double?) {
+    fun clearHistorial() {
+        // limpiamos primero en memoria para que la ui responda al momento.
+        _historial.value = emptyList()
+        viewModelScope.launch {
+            historyRepository.clearAllHistory()
+        }
+    }
+
+    fun clearFavoritos() {
+        // quitamos marca favorito en toda la lista y propagamos a vistas dependientes.
+        listaOriginal = listaOriginal.map { it.copy(esFavorito = false) }
+        _fiestas.value = listaOriginal
+        _favoritos.value = emptyList()
+        aplicarFiltrosLista()
+
+        viewModelScope.launch {
+            favoritesRepository.clearAllFavorites()
+        }
+    }
+
+    // punto de entrada unico para filtros de lista.
+    // aquí solo guardamos estado y luego aplicamos en bloque.
+    fun buscarFiltrarYDistancia(texto: String, localidad: String, zona: String, km: Double?, order: String) {
 
         currentBusqueda = texto
         currentLocalidad = localidad
         currentZona = zona
         currentKm = km
+        currentOrder = order
 
         aplicarFiltrosLista()
     }
 
     private fun aplicarFiltrosLista() {
+
+        // este filtro solo afecta a la pestaña de lista (fiestasFiltradas).
+        // favoritos, historial y mapa salen de sus propios datos.
 
         val filtrada = listaOriginal.filter {
 
@@ -153,14 +187,31 @@ class FiestaViewModel(application: Application) : AndroidViewModel(application) 
             coincideBusqueda && coincideLocalidad && coincideZona && coincideDistancia
         }
 
-        _fiestasFiltradas.value = filtrada
+        val ordered = when (currentOrder) {
+            ORDER_DISTANCE -> orderByDistance(filtrada)
+            else -> filtrada.sortedBy { it.nombre.lowercase() }
+        }
+
+        _fiestasFiltradas.value = ordered
+    }
+
+    private fun orderByDistance(items: List<Fiesta>): List<Fiesta> {
+        val lat = userLat
+        val lng = userLng
+
+        // si no hay ubicación disponible, ordenamos por nombre para no romper la experiencia.
+        if (lat == null || lng == null) {
+            return items.sortedBy { it.nombre.lowercase() }
+        }
+
+        return items.sortedBy { distanciaKm(lat, lng, it.latitud, it.longitud) }
     }
 
     private fun actualizarFavoritosYHistorial() {
         _favoritos.value = listaOriginal.filter { it.esFavorito }
     }
 
-    // 📏 DISTANCIA
+    // si no hay ubicación o no hay km activo, no se descarta ninguna fiesta.
     private fun cumpleDistancia(fiesta: Fiesta, km: Double?): Boolean {
 
         val lat = userLat ?: return true
@@ -175,6 +226,7 @@ class FiestaViewModel(application: Application) : AndroidViewModel(application) 
 
     private fun distanciaKm(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
 
+        // cálculo con formula de haversine para distancia entre coordenadas geográficas.
         val R = 6371.0
 
         val dLat = Math.toRadians(lat2 - lat1)

@@ -16,6 +16,8 @@ class FiestaAdapter(
     private val onFavClick: (Fiesta) -> Unit
 ) : RecyclerView.Adapter<FiestaAdapter.ViewHolder>() {
 
+    // esta lista es la fuente de verdad de lo que pinta el recycler.
+    // se actualiza desde el fragment cuando cambian filtros o datos.
     private var lista: List<Fiesta> = emptyList()
 
     fun setData(nuevaLista: List<Fiesta>) {
@@ -27,7 +29,7 @@ class FiestaAdapter(
         val image: ImageView = view.findViewById(R.id.image)
         val title: TextView = view.findViewById(R.id.title)
         val location: TextView = view.findViewById(R.id.location)
-        val fav: ImageView = view.findViewById(R.id.favIcon) // ⭐ nuevo
+        val fav: ImageView = view.findViewById(R.id.favIcon)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -49,23 +51,23 @@ class FiestaAdapter(
             .centerCrop()
             .into(holder.image)
 
-        //  estado visual favorito
+        // aquí solo cambiamos el icono para reflejar el estado actual del modelo.
         holder.fav.setImageResource(
             if (fiesta.esFavorito) R.drawable.ic_fav_filled
             else R.drawable.ic_fav_border
         )
 
-        //  click favorito
+        // este click delega al fragment/viewmodel. el adapter no decide la lógica.
         holder.fav.setOnClickListener {
             onFavClick(fiesta)
         }
 
-        // 🎯 click normal (detalle + historial)
+        // este click abre detalle y, desde fuera, también se usa para guardar historial.
         holder.itemView.setOnClickListener {
             onClick(fiesta)
         }
 
-        // animación
+        // animación de entrada simple para que la lista aparezca más suave.
         holder.itemView.apply {
             alpha = 0f
             translationY = 80f
