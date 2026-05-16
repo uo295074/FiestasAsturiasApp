@@ -1,6 +1,7 @@
 package es.uniovi.imovil.fiestasasturias.ui
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.core.app.ActivityCompat
@@ -8,6 +9,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.navigation.NavController
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.navigateUp
+import androidx.navigation.ui.setupActionBarWithNavController
+import androidx.navigation.ui.setupWithNavController
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -18,18 +25,20 @@ import es.uniovi.imovil.fiestasasturias.domain.FiestaViewModel
 class MainActivity : AppCompatActivity() {
 
     private val viewModel: FiestaViewModel by viewModels()
-    private var selectedNavItemId: Int = R.id.nav_home
     private lateinit var bottomNav: BottomNavigationView
-
-    companion object {
-        private const val KEY_SELECTED_NAV = "selected_nav"
-    }
+    private lateinit var navController: NavController
+    private lateinit var appBarConfiguration: AppBarConfiguration
 
     // gestionamos permiso de ubicación con el launcher moderno para evitar onActivityResult legado.
     private val locationPermissionLauncher =
         registerForActivityResult(
             ActivityResultContracts.RequestPermission()
         ) { isGranted: Boolean ->
+
+            getSharedPreferences(AppPreferences.PREFS, Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean(AppPreferences.KEY_LOCATION_PERMISSION_ASKED, true)
+                .apply()
 
             if (isGranted) {
                 fetchUserLocation()
@@ -44,28 +53,19 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        selectedNavItemId = savedInstanceState?.getInt(KEY_SELECTED_NAV, R.id.nav_home) ?: R.id.nav_home
-
         bottomNav = findViewById(R.id.bottomNav)
         val topBar = findViewById<MaterialToolbar>(R.id.topBar)
 
         setSupportActionBar(topBar)
 
-        // cargamos home solo en primer arranque; en recreaciones respetamos el fragment actual.
-        if (savedInstanceState == null) {
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.fragmentContainerView, HomeFragment())
-                .commit()
-        }
-
-        bottomNav.setOnItemSelectedListener {
-            selectedNavItemId = it.itemId
-            navigateTo(it.itemId)
-        }
-
-        if (savedInstanceState != null) {
-            bottomNav.selectedItemId = selectedNavItemId
-        }
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
+        navController = navHostFragment.navController
+        appBarConfiguration = AppBarConfiguration(
+            setOf(R.id.nav_home, R.id.nav_list, R.id.nav_map, R.id.nav_fav, R.id.nav_settings)
+        )
+        setupActionBarWithNavController(navController, appBarConfiguration)
+        bottomNav.setupWithNavController(navController)
 
         // pedimos permiso de ubicación para habilitar el filtro por km y la posición en mapa.
         checkLocationPermission()
@@ -76,50 +76,23 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        outState.putInt(KEY_SELECTED_NAV, selectedNavItemId)
-        super.onSaveInstanceState(outState)
-    }
-
     override fun onResume() {
         super.onResume()
         fetchUserLocation()
     }
 
     fun openHistoryFromSettings() {
-        // historial cuelga de ajustes, por eso se abre como navegación secundaria con backstack.
-        selectedNavItemId = R.id.nav_settings
-        supportFragmentManager.beginTransaction()
-            .setCustomAnimations(
-                android.R.anim.fade_in,
-                android.R.anim.fade_out
-            )
-            .replace(R.id.fragmentContainerView, HistorialFragment())
-            .addToBackStack(null)
-            .commit()
+        if (navController.currentDestination?.id != R.id.nav_history) {
+            navController.navigate(R.id.nav_history)
+        }
     }
 
-    private fun navigateTo(itemId: Int): Boolean {
-        val fragment = when (itemId) {
-            R.id.nav_home -> HomeFragment()
-            R.id.nav_list -> ListFragment()
-            R.id.nav_map -> MapFragment()
-            R.id.nav_fav -> FavoritosFragment()
-            R.id.nav_settings -> SettingsFragment()
-            else -> null
-        }
+    fun refreshLocationFromSettings() {
+        fetchUserLocation()
+    }
 
-        fragment?.let {
-            supportFragmentManager.beginTransaction()
-                .setCustomAnimations(
-                    android.R.anim.fade_in,
-                    android.R.anim.fade_out
-                )
-                .replace(R.id.fragmentContainerView, it)
-                .commit()
-            return true
-        }
-        return false
+    override fun onSupportNavigateUp(): Boolean {
+        return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 
     private fun checkLocationPermission() {
@@ -132,11 +105,16 @@ class MainActivity : AppCompatActivity() {
                 fetchUserLocation()
             }
 
-            else -> {
-                //  lanzar petición
+            !hasAskedLocationPermission() -> {
+                // solo pedimos ubicación automáticamente una vez; después queda el botón de ajustes.
                 locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
             }
         }
+    }
+
+    private fun hasAskedLocationPermission(): Boolean {
+        return getSharedPreferences(AppPreferences.PREFS, Context.MODE_PRIVATE)
+            .getBoolean(AppPreferences.KEY_LOCATION_PERMISSION_ASKED, false)
     }
 
     private fun fetchUserLocation() {

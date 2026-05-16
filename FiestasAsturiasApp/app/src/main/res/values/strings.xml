@@ -31,9 +31,19 @@
     <string name="open_history">Abrir historial</string>
     <string name="clear_history">Borrar historial</string>
     <string name="clear_favorites">Borrar favoritos</string>
+    <string name="location_permission_title">Ubicacion</string>
+    <string name="location_permission_indication">Permite la ubicacion para ordenar y filtrar por cercania</string>
+    <string name="location_permission_button">Activar ubicacion</string>
+    <string name="location_permission_enabled">Ubicacion activada</string>
+    <string name="location_permission_granted">Permiso de ubicacion activado</string>
+    <string name="location_permission_already_granted">La ubicacion ya esta activada</string>
+    <string name="location_permission_denied_message">No se pudo activar desde la app. Abre los ajustes de la aplicacion y permite la ubicacion.</string>
+    <string name="open_app_settings">Abrir ajustes</string>
+    <string name="cancel">Cancelar</string>
 
     <string name="favorites">Favoritos</string>
     <string name="history">Historial</string>
+    <string name="details">Detalle</string>
     <string name="list">Lista</string>
     <string name="map">Mapa</string>
     <string name="home">Inicio</string>

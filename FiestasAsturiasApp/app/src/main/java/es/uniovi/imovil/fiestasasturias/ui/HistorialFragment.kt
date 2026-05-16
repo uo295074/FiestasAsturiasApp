@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import es.uniovi.imovil.fiestasasturias.R
 import es.uniovi.imovil.fiestasasturias.adapters.FiestaAdapter
@@ -74,11 +75,8 @@ class HistorialFragment : Fragment() {
                         .replace(R.id.detailContainer, detailFragment)
                         .commit()
                 } else {
-                    // en móvil navegamos al contenedor principal.
-                    parentFragmentManager.beginTransaction()
-                        .replace(R.id.fragmentContainerView, detailFragment)
-                        .addToBackStack(null)
-                        .commit()
+                    // en móvil usamos la api de navegación para mantener el backstack consistente.
+                    findNavController().navigate(R.id.nav_detail, bundle)
                 }
             },
 

@@ -9,7 +9,6 @@ import es.uniovi.imovil.fiestasasturias.data.FiestaRepository
 import es.uniovi.imovil.fiestasasturias.data.local.AppDatabase
 import es.uniovi.imovil.fiestasasturias.model.Fiesta
 import kotlinx.coroutines.launch
-import kotlin.math.*
 
 class FiestaViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -31,8 +30,8 @@ class FiestaViewModel(application: Application) : AndroidViewModel(application) 
     private val _fiestas = MutableLiveData<List<Fiesta>>()
     val fiestas: LiveData<List<Fiesta>> = _fiestas
 
-    private val _fiestasFiltradas = MutableLiveData<List<Fiesta>>()
-    val fiestasFiltradas: LiveData<List<Fiesta>> = _fiestasFiltradas
+    private val _fiestasBuscadas = MutableLiveData<List<Fiesta>>()
+    val fiestasBuscadas: LiveData<List<Fiesta>> = _fiestasBuscadas
 
     private val _favoritos = MutableLiveData<List<Fiesta>>()
     val favoritos: LiveData<List<Fiesta>> = _favoritos
@@ -46,26 +45,22 @@ class FiestaViewModel(application: Application) : AndroidViewModel(application) 
     private val _historial = MutableLiveData<List<Fiesta>>()
     val historial: LiveData<List<Fiesta>> = _historial
 
+    private val _userLocation = MutableLiveData<Pair<Double, Double>?>()
+    val userLocation: LiveData<Pair<Double, Double>?> = _userLocation
+
     private var listaOriginal: List<Fiesta> = emptyList()
 
     // última ubicación conocida del usuario. se usa para filtro por distancia.
     var userLat: Double? = null
     var userLng: Double? = null
 
-    // estado actual de filtros en lista.
-    // lo guardamos aquí para poder re-aplicarlo cuando cambian datos o ubicación.
+    // estado actual de búsqueda en lista. los filtros visuales se aplican en ListFragment.
     private var currentBusqueda: String = ""
-    private var currentLocalidad: String = ""
-    private var currentZona: String = ""
-    private var currentKm: Double? = null
-    private var currentOrder: String = ORDER_NAME
 
     fun setUserLocation(lat: Double, lng: Double) {
         userLat = lat
         userLng = lng
-
-        // si cambia la ubicación, puede cambiar el resultado del filtro por km.
-        aplicarFiltrosLista()
+        _userLocation.value = lat to lng
     }
 
     fun cargarFiestas() {
@@ -81,6 +76,7 @@ class FiestaViewModel(application: Application) : AndroidViewModel(application) 
                 }
 
                 listaOriginal = listaConFavoritos
+                repository.actualizarCache(listaOriginal)
                 _fiestas.value = listaConFavoritos
                 _localidades.value = listaConFavoritos.map { it.localidad }.distinct().sorted()
                 _zonas.value = listaConFavoritos.mapNotNull { it.zona }.distinct().sorted()
@@ -91,7 +87,7 @@ class FiestaViewModel(application: Application) : AndroidViewModel(application) 
                 }
 
                 actualizarFavoritosYHistorial()
-                aplicarFiltrosLista()
+                buscarFiestas(currentBusqueda)
 
             } catch (e: Exception) {
                 Log.e("DEBUG_API", "ERROR: ${e.message}")
@@ -110,6 +106,7 @@ class FiestaViewModel(application: Application) : AndroidViewModel(application) 
         }
 
         listaOriginal = nuevos
+        repository.actualizarCache(listaOriginal)
 
         if (fiestaActualizada != null) {
             viewModelScope.launch {
@@ -119,7 +116,7 @@ class FiestaViewModel(application: Application) : AndroidViewModel(application) 
 
         _fiestas.value = listaOriginal
         actualizarFavoritosYHistorial()
-        aplicarFiltrosLista()
+        buscarFiestas(currentBusqueda)
     }
 
     // añade una fiesta al historial, evita duplicados y limita a los 20 ultimos elementos.
@@ -150,95 +147,23 @@ class FiestaViewModel(application: Application) : AndroidViewModel(application) 
     fun clearFavoritos() {
         // quitamos marca favorito en toda la lista y propagamos a vistas dependientes.
         listaOriginal = listaOriginal.map { it.copy(esFavorito = false) }
+        repository.actualizarCache(listaOriginal)
         _fiestas.value = listaOriginal
         _favoritos.value = emptyList()
-        aplicarFiltrosLista()
+        buscarFiestas(currentBusqueda)
 
         viewModelScope.launch {
             favoritesRepository.clearAllFavorites()
         }
     }
 
-    // punto de entrada unico para filtros de lista.
-    // aquí solo guardamos estado y luego aplicamos en bloque.
-    fun buscarFiltrarYDistancia(texto: String, localidad: String, zona: String, km: Double?, order: String) {
-
+    fun buscarFiestas(texto: String) {
         currentBusqueda = texto
-        currentLocalidad = localidad
-        currentZona = zona
-        currentKm = km
-        currentOrder = order
-
-        aplicarFiltrosLista()
-    }
-
-    private fun aplicarFiltrosLista() {
-
-        // este filtro solo afecta a la pestaña de lista (fiestasFiltradas).
-        // favoritos, historial y mapa salen de sus propios datos.
-
-        val filtrada = listaOriginal.filter {
-
-            val coincideBusqueda = it.nombre.contains(currentBusqueda, true)
-            val coincideLocalidad = it.localidad.contains(currentLocalidad, true)
-            val coincideZona = (it.zona ?: "").contains(currentZona, true)
-            val coincideDistancia = cumpleDistancia(it, currentKm)
-
-            coincideBusqueda && coincideLocalidad && coincideZona && coincideDistancia
-        }
-
-        val ordered = when (currentOrder) {
-            ORDER_DISTANCE -> orderByDistance(filtrada)
-            else -> filtrada.sortedBy { it.nombre.lowercase() }
-        }
-
-        _fiestasFiltradas.value = ordered
-    }
-
-    private fun orderByDistance(items: List<Fiesta>): List<Fiesta> {
-        val lat = userLat
-        val lng = userLng
-
-        // si no hay ubicación disponible, ordenamos por nombre para no romper la experiencia.
-        if (lat == null || lng == null) {
-            return items.sortedBy { it.nombre.lowercase() }
-        }
-
-        return items.sortedBy { distanciaKm(lat, lng, it.latitud, it.longitud) }
+        _fiestasBuscadas.value = repository.buscarFiestas(texto)
     }
 
     private fun actualizarFavoritosYHistorial() {
         _favoritos.value = listaOriginal.filter { it.esFavorito }
     }
 
-    // si no hay ubicación o no hay km activo, no se descarta ninguna fiesta.
-    private fun cumpleDistancia(fiesta: Fiesta, km: Double?): Boolean {
-
-        val lat = userLat ?: return true
-        val lng = userLng ?: return true
-
-        if (km == null) return true
-
-        val dist = distanciaKm(lat, lng, fiesta.latitud, fiesta.longitud)
-
-        return dist <= km
-    }
-
-    private fun distanciaKm(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
-
-        // cálculo con formula de haversine para distancia entre coordenadas geográficas.
-        val R = 6371.0
-
-        val dLat = Math.toRadians(lat2 - lat1)
-        val dLon = Math.toRadians(lon2 - lon1)
-
-        val a = sin(dLat / 2).pow(2) +
-                cos(Math.toRadians(lat1)) *
-                cos(Math.toRadians(lat2)) *
-                sin(dLon / 2).pow(2)
-
-        val c = 2 * atan2(sqrt(a), sqrt(1 - a))
-
-        return R * c
-    }
 }

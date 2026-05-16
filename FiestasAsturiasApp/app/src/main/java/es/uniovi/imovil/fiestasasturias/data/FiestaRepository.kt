@@ -5,13 +5,15 @@ import es.uniovi.imovil.fiestasasturias.model.Fiesta
 
 class FiestaRepository {
 
+    private var fiestasCache: List<Fiesta> = emptyList()
+
     // este repositorio hace de puente entre el json remoto y el modelo de dominio Fiesta.
     // aquí concentramos parseo  normalización para que el viewmodel reciba datos limpios.
     suspend fun getFiestas(): List<Fiesta> {
 
         val response = RetrofitClient.api.getFiestas()
 
-        return response.articles.article.map { dto ->
+        fiestasCache = response.articles.article.map { dto ->
 
             val coordsString = dto.Geolocalizacion.Coordenadas.content
             val lat: Double
@@ -62,6 +64,21 @@ class FiestaRepository {
                 otrosCanales = otrosCanales
             )
         }
+
+        return fiestasCache
+    }
+
+    fun buscarFiestas(texto: String): List<Fiesta> {
+        val busqueda = texto.trim()
+        if (busqueda.isBlank()) return fiestasCache
+
+        return fiestasCache.filter { fiesta ->
+            fiesta.nombre.contains(busqueda, ignoreCase = true)
+        }
+    }
+
+    fun actualizarCache(fiestas: List<Fiesta>) {
+        fiestasCache = fiestas
     }
 
     private fun normalizeText(value: String?): String? {

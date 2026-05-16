@@ -9,6 +9,7 @@ object AppPreferences {
     const val KEY_DARK_MODE = "dark_mode"
     const val KEY_LANGUAGE = "language"
     const val KEY_MAP_TYPE = "map_type"
+    const val KEY_LOCATION_PERMISSION_ASKED = "location_permission_asked"
     const val MAP_TYPE_NORMAL = "normal"
     const val MAP_TYPE_SATELLITE = "satellite"
     const val DEFAULT_MAP_TYPE = MAP_TYPE_NORMAL

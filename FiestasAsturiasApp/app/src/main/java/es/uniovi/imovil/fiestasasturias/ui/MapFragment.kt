@@ -14,6 +14,7 @@ import android.view.View
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -41,12 +42,14 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
     private var locationCallback: LocationCallback? = null
     private var userMarker: Marker? = null
     private var requestingLocationUpdates = false
+    private var isTablet = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentMapBinding.bind(view)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
+        isTablet = requireActivity().findViewById<View?>(R.id.detailContainer) != null
 
         // animación ligera para que el mapa no aparezca de golpe.
         binding.root.alpha = 0f
@@ -82,6 +85,8 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
             }
 
             fiesta?.let {
+                viewModel.addHistorial(it)
+
                 val bundle = Bundle().apply {
                     putString("nombre", it.nombre)
                     putString("descripcion", it.descripcion)
@@ -104,12 +109,13 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
                     )
                 }
 
-                parentFragmentManager.beginTransaction()
-                    .replace(R.id.fragmentContainerView, DetailFragment().apply {
-                        arguments = bundle
-                    })
-                    .addToBackStack(null)
-                    .commit()
+                if (isTablet) {
+                    parentFragmentManager.beginTransaction()
+                        .replace(R.id.detailContainer, DetailFragment().apply { arguments = bundle })
+                        .commit()
+                } else {
+                    findNavController().navigate(R.id.nav_detail, bundle)
+                }
             }
         }
 

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/nav_home">
+
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="es.uniovi.imovil.fiestasasturias.ui.HomeFragment"
+        android:label="@string/home" />
+
+    <fragment
+        android:id="@+id/nav_list"
+        android:name="es.uniovi.imovil.fiestasasturias.ui.ListFragment"
+        android:label="@string/list" />
+
+    <fragment
+        android:id="@+id/nav_map"
+        android:name="es.uniovi.imovil.fiestasasturias.ui.MapFragment"
+        android:label="@string/map" />
+
+    <fragment
+        android:id="@+id/nav_fav"
+        android:name="es.uniovi.imovil.fiestasasturias.ui.FavoritosFragment"
+        android:label="@string/favorites" />
+
+    <fragment
+        android:id="@+id/nav_settings"
+        android:name="es.uniovi.imovil.fiestasasturias.ui.SettingsFragment"
+        android:label="@string/settings" />
+
+    <fragment
+        android:id="@+id/nav_detail"
+        android:name="es.uniovi.imovil.fiestasasturias.ui.DetailFragment"
+        android:label="@string/details" />
+
+    <fragment
+        android:id="@+id/nav_history"
+        android:name="es.uniovi.imovil.fiestasasturias.ui.HistorialFragment"
+        android:label="@string/history" />
+
+</navigation>
